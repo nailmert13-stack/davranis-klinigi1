@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Davranis" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">#C4452B</item>
+        <item name="colorPrimaryDark">#17324A</item>
+        <item name="colorAccent">#C4452B</item>
+        <item name="android:statusBarColor">#17324A</item>
+    </style>
+</resources>

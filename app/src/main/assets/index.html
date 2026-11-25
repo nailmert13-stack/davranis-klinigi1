@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Davranış Kliniği Formları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Literata:opsz,wght@7..72,600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: sakin, klinik, kâğıt formun düzenli dijital hali
+   IDEA: muayene masasındaki klipsli form; bölüm sekmeleri dosya ayırıcıları gibi
+   PICTURE: formun kendisi; kalemle çizilen kroki ve imza alanları
+   COLOUR and TYPE: beyaz zemin, lacivert mürekkep #17324a, köpek için mercan, kedi için erik vurgusu; Literata başlık, Atkinson Hyperlegible gövde
+   LAYOUT: üstte sabit çubuk (form seçimi + kaydet), yatay bölüm şeridi, tek sütun geniş alanlar */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0f1a24);--panel:light-dark(#f3f6f8,#172633);--ink:light-dark(#17324a,#e4ecf2);--soft:light-dark(#5a6d7d,#9fb2c2);--line:light-dark(#d5dee5,#2a3c4b);--acc:light-dark(#c4452b,#f08a70);--acc2:light-dark(#fbe9e4,#3a2420);--ok:light-dark(#1f6f50,#7fd4ae)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+body.kedi{--acc:light-dark(#7a3b74,#d79bd0);--acc2:light-dark(#f4e8f2,#33223a)}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,sans-serif;overflow-x:clip}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px max(3vw,12px)}
+.seg{display:flex;border:2px solid var(--acc);border-radius:12px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-width:96px}
+.seg button[aria-pressed=true]{background:var(--acc);color:#fff}
+button{font:inherit;font-size:16px;min-height:44px;padding:8px 16px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.primary{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700}
+.primary:disabled{opacity:.5}
+.grow{flex:1}
+#status{font-size:14px;color:var(--soft)}
+#status.ok{color:var(--ok)}#status.err{color:var(--acc)}
+nav.scroll{display:flex;gap:6px;padding:0 max(3vw,12px) 10px;overflow-x:auto;scrollbar-width:thin}
+nav a{flex:none;text-decoration:none;color:var(--ink);background:var(--panel);padding:8px 12px;border-radius:999px;font-size:14px;white-space:nowrap}
+main{max-width:920px;margin:0 auto;padding:12px max(3vw,12px) 120px}
+h1{font:600 clamp(28px,4vw,40px)/1.1 Literata,Georgia,serif;margin:18px 0 4px;text-wrap:balance}
+.sub{color:var(--soft);margin:0 0 8px}
+h2{font:600 24px/1.2 Literata,Georgia,serif;margin:40px 0 12px;padding-top:10px;border-top:3px solid var(--acc);scroll-margin-top:130px}
+h3{font-size:18px;margin:26px 0 6px;color:var(--acc)}
+.f{margin:14px 0}
+.f.in{margin-left:clamp(14px,4vw,32px);padding-left:12px;border-left:2px solid var(--line)}
+label.l,.l{display:block;font-weight:700;margin-bottom:6px}
+.note{color:var(--soft);font-size:15px;margin:8px 0}
+input[type=text],input[type=date],textarea{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+textarea{min-height:92px;resize:vertical}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:0 18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--panel);border:1px solid var(--line)}
+.chip[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
+.chip[data-multi="1"]::before{content:"";display:inline-block;width:18px;height:18px;border:2px solid currentColor;border-radius:4px;margin-right:8px;vertical-align:-3px;text-align:center;line-height:15px;font-size:14px;font-weight:700}
+.chip[data-multi="1"][aria-pressed=true]::before{content:"✓"}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid var(--line);padding:4px;text-align:left;vertical-align:top;font-size:15px}
+th{background:var(--panel);padding:8px}
+td input{border:0!important;background:transparent!important;padding:8px!important}
+td.c{text-align:center}
+.ehb{min-width:58px;font-weight:700}
+.ehb[data-v=E]{background:var(--acc);color:#fff}
+.ehb[data-v=H]{background:var(--panel)}
+.ehb[data-v=B]{background:var(--acc2)}
+.pad{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.pad canvas{display:block;width:100%;touch-action:none;cursor:crosshair}
+.tools{display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--panel);border-bottom:1px solid var(--line)}
+.dot{width:44px;padding:0;display:grid;place-items:center}
+.dot i{width:18px;height:18px;border-radius:50%;display:block}
+.tools button[aria-pressed=true]{outline:3px solid var(--acc)}
+ul.hint{margin:6px 0 10px;padding-left:20px;color:var(--soft);font-size:15px}
+.ink{position:relative;height:64px;background-color:#fbfcfd;background-image:linear-gradient(transparent calc(100% - 1px),#dfe6ec 0);background-size:100% 32px;background-position:0 14px;border:1px solid var(--line);border-radius:10px;touch-action:none;cursor:crosshair;overflow:hidden}
+.ink.sz-a{height:150px}
+td .ink{border:0;border-radius:0;height:56px;min-width:130px}
+.ink>canvas{position:absolute;left:0;top:0;pointer-events:none}
+.ocr{font-size:15px;line-height:1.4;padding:5px 2px 0;white-space:pre-wrap}
+.ocr:empty{display:none}
+.ocr b{color:var(--soft);font-weight:400}
+.ocr.wait{color:var(--soft);font-style:italic}
+td .ocr{font-size:13px;padding:2px 6px 4px}
+input[type=date]{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:54px}
+.penbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 max(3vw,12px) 10px}
+.penbar .lbl{font-size:14px;color:var(--soft);margin-right:4px}
+.penbar button[aria-pressed=true]{outline:3px solid var(--acc)}
+#bFinger[aria-pressed=true]{background:var(--acc);color:#fff;outline:0}
+#ocrNote{font-size:14px;color:var(--acc);flex-basis:100%}
+#ocrNote:empty{display:none}
+.para{margin:12px 0;text-align:justify;hyphens:auto}
+.para.small{font-size:14px;color:var(--soft)}
+.para.bold{font-weight:700}
+.sticker{display:grid;gap:8px;justify-items:start}
+.shot{display:flex;gap:14px;align-items:center;cursor:pointer;min-height:130px;width:min(100%,420px);padding:16px 18px;border:2px dashed var(--ink);border-radius:22px;background:var(--panel)}
+.shot small{color:var(--soft);font-size:14px}
+.cam{color:var(--acc);flex:none}
+.sticker.has .shot{padding:6px;border-style:solid;border-width:1px;border-color:var(--line);min-height:0}
+.shot img{display:block;width:100%;border-radius:16px}
+.numf{min-width:160px;min-height:58px;font-size:22px;font-weight:700;text-align:left;background:#fbfcfd;color:#17324a;border:1px solid var(--line)}
+.numf .ph{font-size:15px;font-weight:400;color:#7a8a97}
+.numf small{font-size:15px;font-weight:400;color:#5a6d7d;margin-left:4px}
+.np{background:var(--bg);border-radius:16px;padding:18px;width:min(92vw,340px)}
+.npl{font-weight:700;margin-bottom:6px}
+.npv{font-size:36px;font-weight:700;min-height:52px;padding:4px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:12px;background:#fbfcfd;color:#17324a}
+.npk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.npk button{min-height:60px;font-size:24px}
+.npa{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.ses{border-left:4px solid #e0a400;padding-left:10px}
+td.ses{background:#fff3c4}
+.sesnote,.ocr.ses{font-size:14px;color:#6b5200;margin-top:4px}
+.ocr.ses b,.sesnote b{color:#8a6a00}
+.unses{min-height:32px;padding:2px 10px;font-size:13px;margin-left:6px}
+.sesbar{padding:6px max(3vw,12px) 10px;font-size:14px;color:var(--soft)}
+.sesbar .rec{display:inline-block;width:12px;height:12px;border-radius:50%;background:#d62828;margin-right:6px;vertical-align:-1px}
+.sestext{color:var(--ink);font-size:15px;margin-top:4px;max-height:3.2em;overflow:hidden}
+#bSes[aria-pressed=true]{background:#d62828;color:#fff;border-color:#d62828}
+#list{margin-top:50px;padding:16px;background:var(--panel);border-radius:14px}
+#list a{color:var(--acc);font-weight:700}
+#list li{margin:6px 0}
+.dlg{position:fixed;inset:0;background:#0008;display:none;place-items:center;z-index:20;padding:16px}
+.dlg.on{display:grid}
+.dlg>div{background:var(--bg);border-radius:14px;padding:22px;max-width:440px}
+.dlg p{margin:0 0 16px}
+@media(max-width:600px){table{font-size:13px}.seg button{min-width:76px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;font-weight:700}}
+@media(prefers-reduced-motion:no-preference){h2{transition:border-color .3s}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Form türü">
+      <button id="bKopek" aria-pressed="true">Köpek</button>
+      <button id="bKedi" aria-pressed="false">Kedi</button>
+    </div>
+    <span id="status" class="grow">Taslak bu tablette otomatik tutuluyor</span>
+    <button id="bNew">Yeni hasta</button>
+    <button id="bSave" class="primary">Drive'a kaydet</button>
+  </div>
+  <div class="penbar">
+    <span class="lbl">Mürekkep</span>
+    <button class="dot" data-ic="#17324a" aria-label="Lacivert" aria-pressed="true"><i style="background:#17324a"></i></button>
+    <button class="dot" data-ic="#c4452b" aria-label="Kırmızı" aria-pressed="false"><i style="background:#c4452b"></i></button>
+    <button class="dot" data-ic="#2b62c4" aria-label="Mavi" aria-pressed="false"><i style="background:#2b62c4"></i></button>
+    <button id="bEr" aria-pressed="false">Silgi</button>
+    <button id="bUndo">Geri al</button>
+    <button id="bFinger" aria-pressed="false">Parmakla yazma kapalı</button>
+    <button id="bOcr" hidden>Yazıları metne çevir</button>
+    <button id="bSes" hidden aria-pressed="false">Görüşmeyi dinle</button>
+    <button id="bSet" hidden>Ayarlar</button>
+    <span id="ocrNote"></span>
+  </div>
+  <div id="sesBar" class="sesbar" hidden><span class="rec" aria-hidden="true"></span><b id="sesTime">00:00</b> <span id="sesState"></span><div id="sesText" class="sestext"></div></div>
+  <nav class="scroll" id="nav"></nav>
+</header>
+<main>
+  <h1 id="title"></h1>
+  <p class="sub">Ankara Üniversitesi Veteriner Fakültesi · Davranış Kliniği</p>
+  <form id="form" autocomplete="off"></form>
+  <section id="list"><strong>Bu klasördeki son kayıtlar</strong><ul id="recent"><li class="note">Drive bağlantısı bekleniyor…</li></ul></section>
+</main>
+<div class="dlg" id="np"><div class="np" role="dialog" aria-modal="true" aria-labelledby="npLabel"><div class="npl" id="npLabel"></div><div class="npv" id="npVal"></div>
+  <div class="npk"><button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" data-k=",">,</button><button type="button" data-k="0">0</button><button type="button" data-k="del" aria-label="Sil">⌫</button></div>
+  <div class="npa"><button type="button" data-k="clr">Temizle</button><button type="button" data-k="no">Vazgeç</button><button type="button" data-k="ok" class="primary">Tamam</button></div></div></div>
+<div class="dlg" id="dlg"><div><p id="dlgText"></p><div class="chips"><button id="dlgYes" class="primary">Evet</button><button id="dlgNo">Vazgeç</button></div></div></div>
+
+<script id="backend">
+/* Android uygulaması sürümü: el yazısı ve ses cihazda, kayıt ve tablo Apps Script üzerinden */
+(()=>{const B=window.AndroidBridge,pend={},H={final:[],partial:[],state:[],status:[]};let n=0,cfg=null;
+  if(B)B.onmessage=ev=>{let m;try{m=JSON.parse(ev.data)}catch(e){return}
+    if(m.type==="event"){(H[m.kind]||[]).forEach(f=>{try{f(m)}catch(e){}});return}
+    const p=pend[m.id];if(!p)return;delete pend[m.id];m.ok?p.ok(m.result):p.no(new Error(m.error||"hata"))};
+  const nat=(op,args)=>new Promise((ok,no)=>{if(!B)return no(new Error("Uygulama köprüsü yok"));const id=++n;pend[id]={ok,no};B.postMessage(JSON.stringify({id,op,args}))});
+  const api=async(islem,...args)=>{if(!cfg||!cfg.url)throw new Error("Apps Script adresi girilmemiş (Ayarlar)");
+    const r=await fetch(cfg.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({anahtar:cfg.key,islem,args})});
+    let j;try{j=await r.json()}catch(e){throw new Error("Apps Script yanıtı okunamadı (adres veya dağıtım erişimi hatalı olabilir)")}
+    if(!j.ok)throw new Error(j.hata||"hata");return j.sonuc};
+  window.BK={drive:false,ocrOn:!!B,sesOn:false,maxImages:30,noDrive:"Apps Script adresi ve anahtarı girilmemiş: Ayarlar'a dokunun",
+    on:(k,f)=>{(H[k]=H[k]||[]).push(f)},
+    settings:()=>nat("settings"),
+    async init(){cfg=await nat("config");if(!cfg||!cfg.url)return;const a=await api("ayarlar");this.drive=true;this.sesOn=!!(a&&a.ses)},
+    save:(kind,title,html)=>api("formuKaydet",kind,title,html),
+    recent:kind=>api("sonKayitlar",kind),
+    writeSheets:list=>api("tabloyaYaz",list),
+    recognizeInk:items=>nat("ink",items),
+    sesleDoldur:(d,q,son)=>api("sesleDoldur",d,q,!!son),
+    speech:{start:()=>nat("speechStart"),stop:()=>nat("speechStop")},
+    errKind(e){return(e&&e.message||"hata").slice(0,140)}};
+})();
+</script>
+<script>
+{
+const YN=["Evet","Hayır"];
+const ilac=["İlaç / Uygulanan tedavi","Doz / Sıklık"];
+/* şema: [tip, etiket, ...]  tip: h bölüm, h3 ara başlık, t metin, a uzun metin, d tarih, yn evet/hayır, r tek seçim, c çoklu seçim, tb tablo, g ızgara, s çizim, n not. Etiket ">" ile başlarsa alt soru */
+const KOPEK=[
+["h","1. Köpek sahibinin bilgileri"],
+["d","Tarih"],["t","Adı Soyadı"],["t","Adres"],["two",["t","Telefon No"],["t","Email"]],
+["yn","Daha önce köpek beslediniz mi?"],["yn","Daha önce bu ırktan bir köpek beslediniz mi?"],["yn","Daha önce başka bir hayvanınız oldu mu?"],
+["tb","Evde başka hayvan varsa",["Tür ve Irk","İsim","Yaş","Kısır / Kısır değil"],4,"Diğer hayvanlar"],
+["tb","Evde ikamet eden diğer aile bireyleri",["İsim","Yaş","Meslek"],4,"Aile bireyleri"],
+["h","2. Köpeğin bilgileri"],
+["two",["t","İsim"],["t","Irk"]],
+["r","Cinsiyet",["Erkek","Dişi","Kısır Erkek","Kısır Dişi"]],
+["two",["d","Doğum tarihi"],["num","Sahiplenildiği yaş (biliniyorsa)","yıl"]],
+["two",["d","Sahiplenildiği tarih"],["t","Sahiplenildiği yer"]],
+["a","Bu köpeği sahiplenme sebebi"],
+["yn","Köpek damızlık olarak kullanıldı mı?"],["num",">Evetse kaç yaşında kullanıldı?","yıl"],
+["a","Köpeğin kişiliğini nasıl tarif edersiniz?"],
+["c","Köpek aşağıdaki önermelerden hangisine/hangilerine uyuyor?",["Agresif (hırlama, havayı ısırma, ısırıp bırakma, ısırma)","Zarar veren","Hiperaktif","Heyecanlı","İlgi isteyen","Gergin","Depresif","İtaatsiz","Gürültücü","Oyuncu","Eğitimli"]],
+["h","A. Klinik geçmiş"],
+["a","1. Tıbbi geçmiş (tekrarlayan sorunlar ve tedavileri)"],
+["a","2. Aşılar / antiparaziter uygulamalar tam mı?"],
+["tb","3. Kullandığı düzenli ilaçlar (alerji, kalp kurdu, bitkisel, homeopatik)",ilac,4,"Düzenli ilaçlar"],
+["yn","4. Geçmişte davranış bozukluğu için ilaç kullandı mı?"],["tb",">Evetse ilaç adı ve dozu",ilac,4,"Geçmiş davranış ilaçları"],
+["yn","5. Şu an davranış bozukluğu için ilaç kullanıyor mu?"],["tb",">Evetse ilaç adı ve dozu",ilac,4,"Şu anki davranış ilaçları"],
+["h","B. Erken dönem"],
+["a","1. Köpek ilk kez ne zaman evden dışarı çıktı?"],
+["a","2. Tuvalet eğitimi için hangi yöntemler uygulandı?"],
+["a","3. Tuvalet eğitimindeki hatalara nasıl tepki verildi?"],
+["yn","4. Yavruyken diğer yavru köpeklerle ortak aktivitelere katıldı mı?"],["a",">Evetse detay"],
+["h","C. Eğitim ve itaat"],
+["yn","1. Köpek profesyonel eğitim aldı mı?"],["a",">Evetse detay (ne zaman, nerede, eğitimdeki yaşı, götüren kişi)"],
+["a","2. Profesyonel eğitimde kullanılan teknikler"],
+["a","3. Sahibin kullandığı eğitim teknikleri"],
+["r","4. Eğitim sırasında ne kadar başarılıydı?",["Oldukça iyi","Ortalamaydı","Başarısızdı","Eğitimi tamamlamadı"]],["a",">Tamamlayamadıysa sebepleri"],
+["r","5. Öğrenme seviyesi",["İyi","Ortalama seviyede","Zayıf"]],
+["c","6. Komutla güvenilir şekilde yaptıkları",["Otur","Bekle","Yat","Getir"]],["t",">Diğer"],
+["a","7. İstenmeyen bir hareket yaptığında bu davranış nasıl düzeltiliyor?"],
+["h","D. Gıda ve beslenme"],
+["a","1. Hangi tip (ve marka) mama ile besleniyor?"],
+["a","2. Nerede ve nasıl besleniyor? (sıklık, zaman)"],
+["num","3. Birden çok köpek varsa mama kabı sayısı","adet"],["t",">a. Mama kapları nerede?"],["t",">b. Köpeği kim besliyor?"],
+["yn","4. Mamasının etrafında koruyucu davranış (hırlama, donup kalma, kapma, ısırma) var mı?"],["a",">Evetse detay"],
+["r","5. İştahı",["İyi","Zayıf"]],["r","6. Yemeğini nasıl yer?",["Hızlı","Yavaş"]],
+["a","7. Kemik veya çiğneme oyuncakları veriliyor mu?"],["a",">Bu oyuncakları sahipleniyor mu? (önünden almakta zorlanıyor musunuz?)"],
+["h","E. Günlük aktiviteler"],
+["h3","Uyuma ve uyanma"],
+["t","1. Nerede uyuyor?"],["yn","2. Kendi yatağı var mı?"],["t","3. Yatakta uyuyorsa kim davet ediyor?"],
+["t","4. Sabah kaçta uyanıyor, günde ortalama ne kadar uyuyor?"],
+["yn","5. Gece sizi uyandırıyor mu?"],["t",">Evetse ne sıklıkla ve neden?"],
+["h3","Dışarı çıkma"],
+["t","1. Ne zaman ve ne kadar süreliğine dışarı çıkıyor?"],["t","2. Dışarı çıkmak istediğini nasıl belli ediyor?"],["t","3. Bahçede serbest geziyor mu?"],["t","4. Bahçede sınırlandırmak için ne tip çit kullanılıyor?"],["t","5. Yalnızken bir yeri/nesneyi keşfetmeye hevesli mi?"],
+["h3","Tuvalet yapma"],
+["yn","1. Küçük miktarlarda idrarla işaretleme yapıyor mu?"],["t",">Evetse nerede/nereye?"],
+["two",["num","2. Günde kaç kez idrar yapıyor?","kez"],["num","3. Günde kaç kez dışkılıyor?","kez"]],
+["h3","Egzersiz"],
+["tb","1. Egzersiz türleri",["Egzersiz türü","Amacı (eğitim/hareket)","Miktar (dk, saat)","Sıklık"],5,"Egzersiz"],
+["t","2. Egzersizi kim yaptırıyor?"],
+["h3","Oyun / eğitim"],
+["yn","1. Günlük oyun ve/veya eğitim için ayrılmış zaman var mı?"],
+["yn","2. Sizinle veya diğer aile üyeleriyle oyun oynuyor mu?"],["a",">Detay"],
+["t","3. Oyunu kim başlatıyor?"],["t","4. Hangi tip oyuncaklarla oynuyor?"],
+["h3","Evde yalnız kalma"],
+["yn","1. Evde tek başına bırakılıyor mu?"],["t","2. Evde kimse yokken nerede duruyor?"],
+["yn","3. Siz evden ayrıldığınızda vokalizasyon var mı?"],
+["c","4. Siz yokken görülen davranışlar",["Artmış vokalizasyon","Tuvalet yapma","Eşyaları, mobilyaları kemirme"]],
+["num","5. Tipik bir günde evde ne kadar yalnız kalıyor?","saat"],
+["yn","6. Son zamanlarda ev rutininde değişiklik oldu mu? (iş saatleri, bebek, taşınma, ev arkadaşı, misafir, mama değişimi)"],["a",">Evetse detay"],
+["h3","Favori şeyler"],
+["tb","En çok keyif aldığı 5 şey (yiyecek, oyuncak, aktivite)",["Favori"],5,"Favoriler"],
+["h","F. Aile üyeleriyle etkileşim"],
+["n","Aşağıdaki durumlarda agresyon (hırlama, diş gösterme, kapma, ısırma, saldırma) var mı? Hücreye dokundukça E (Evet) → H (Hayır) → B (Bilmiyorum) → boş."],
+["g","Dokunulmaya karşı tutum",["Dokunma / temizlik-yıkama","Sevme veya sarılma","Dinlenirken rahatsız etme","Disipline ederken (komut, uyarı)","Kayışta yürürken","Mamasını alıp uzaklaşma","Herhangi bir eşyasını alma"],["Erkek sahip","Kadın sahip","Çocuk","Belli başka birey"],"ehb"],
+["a","Isırma görüldüyse yaranın tarifi (parçalanmış, dişlenmiş/delinmiş vb.)"],
+["h","G. Diğer insanlarla etkileşim"],
+["h3","Misafirlere karşı reaksiyon"],
+["a","1. Eve misafir geldiğinde nasıl davranıyor? (havlama, kapı önünde abartılı davranış)"],
+["yn","2. Davranış tanıdık/tanımadık kişilere göre değişiyor mu?"],["a",">Evetse açıklama"],
+["yn","3. Davranış bu kişileri evde ve dışarıda görmesine göre değişiyor mu?"],["a",">Evetse açıklama"],
+["yn","4. Eve gelen misafirlere agresyon (hırlama, diş gösterme, kapma, ısırma) var mı?"],["a",">Evetse açıklama"],
+["yn","5. Daha önce birine saldırdı / ısırdı mı?"],
+["tb","6. Eve düzenli gelen misafirler",["İsim (biliniyorsa)","Eve geliş amacı","Zaman & günler","Köpeğin tepkisi"],5,"Düzenli misafirler"],
+["tb","7. Diğer ziyaretçilere tepkisi",["Sık gelen misafirler","Arada sırada uğrayanlar","Nadiren gelenler"],1,"Ziyaretçi tepkisi"],
+["g","Diğer insanlara/canlılara karşı tutum",["Tanıdığı erkekler","Tanıdığı kadınlar","Tanıdığı çocuklar","Yabancı erkekler","Yabancı kadınlar","Yabancı çocuklar","Tanıdığı köpekler","Yabancı köpekler","Diğer hayvanlar","Kalabalık / yoğun ortamlar"],["Ev içerisinde","Dışarıda"],"text"],
+["h3","Diğer hayvanlara karşı tutum"],
+["two",["a","1. Egzersizde diğer köpeklere tutumu: kayışta / tasmada"],["a","Kayışsız / tasmasız"]],
+["a","2. Diğer hayvanlara tutumu (kaplumbağa, kirpi, yabancı kediler vb.)"],
+["h","H. Mevcut problem"],
+["a","1. Şu anki problem(ler), kısaca"],
+["two",["t","2. Ne zaman başladı?"],["t","3. Ne zamandan beri var?"]],
+["two",["num","4. Başladığında köpek kaç yaşındaydı?","yıl"],["t","5. Nerede ortaya çıktı?"]],
+["t","6. Kiminleyken ortaya çıktı?"],["r","7. Ne sıklıkla yaşanıyor?",["Her gün","Haftada birkaç kez","Ayda birkaç kez","Daha seyrek"]],
+["a","Diğer detaylar"],
+["h","Klinik notları ve onay"],
+["s","Serbest çizim / not alanı","free"],
+["a","Hekim notu"],
+["t","Formu dolduran: Ad Soyad"],
+["s","İmza","sig"]
+];
+const KEDI=[
+["h","Kedi sahibi ile ilgili bilgiler"],
+["two",["t","İsim Soyisim"],["d","Tarih"]],
+["t","Adres"],["two",["t","Telefon"],["t","E-posta"]],
+["t","Bizi nereden duydunuz? (klinik, fakülte, web sitesi vb.)"],
+["h","Kedi bilgileri"],
+["two",["t","İsim"],["t","Irk"]],
+["two",["num","Yaş","yıl"],["r","Cinsiyet",["Erkek","Dişi","Kısır Erkek","Kısır Dişi"]]],
+["two",["num","Kilo (tahmini)","kg"],["num","Sahiplenildiği yaş","yıl"]],
+["h","Geçmiş ve sağlık"],
+["t","1. Nereden sahiplenildi?"],
+["yn","2. Kısırlaştırıldı mı?"],["t",">Ne zaman?"],
+["a","3. Geçmişteki önemli hastalıkları (detaylı)"],
+["yn","4. Şu anda bir tedavi görüyor mu?"],["a",">Detay"],
+["h","Diğer hayvanlar"],
+["yn","5. Daha önce kedi beslediniz mi?"],["num",">Evetse kaç kedi?","kedi"],
+["yn","6. Şu anda başka kediniz var mı?"],["two",["t",">Cinsiyeti"],["t",">Irkı"]],
+["yn","7. Bu kedinin yaşamı boyunca başka kediniz oldu mu?"],
+["yn","8. Başka bir evcil hayvanınız var mı?"],["t","9. >Evetse türü nedir?"],
+["a","10. Kedi ve diğer evcil hayvan(lar) arasındaki ilişki"],
+["h","Yaşam alanı"],
+["yn","11. Kedi özgürce evden dışarıya çıkıp girebiliyor mu?"],["t",">Evetse nasıl çıkıp giriyor?"],
+["yn","12. Eviniz bahçeli mi?"],["t",">Bahçe ne kadar büyük? Kedi bahçeye çıkıyor mu?"],["t",">Kedinin dolaştığı alan ne büyüklükte?"],
+["num","13. Günde kaç saat dışarıda geçiriyor?","saat"],
+["yn","14. Bölgesini diğer kedilere karşı koruyor mu?"],["a",">Evetse nasıl koruyor, tepkisi nasıl?"],
+["h","Kum kabı"],
+["c","15. Kum kabının tipi",["Açık","Kapalı","Otomatik"]],["t",">Diğer / ek bilgi"],
+["t","Kum tipi"],["t","Kum kabı nerede duruyor?"],["num","Evdeki kum kabı sayısı","adet"],
+["h","Uyku ve dinlenme"],
+["t","16. Sürekli nerede uyumayı/dinlenmeyi seviyor?"],
+["t","17. Yatağı varsa tarifi"],
+["t","18. Birden çok kedi varsa beraber uyuyorlar mı?"],
+["t","19. Dinlenmek için seçtiği ikinci alan"],
+["t","20. Evde girmesinin yasak olduğu alanlar"],
+["h","Beslenme"],
+["two",["t","21. Ne zamanlarda besleniyor?"],["num","22. Günde kaç öğün?","öğün"]],
+["two",["t","23. Kim tarafından besleniyor?"],["t","24. Mama ve su kabı nerede?"]],
+["t","25. Ne ile besleniyor? (kuru mama vb.)"],
+["t","26. Ödül maması veriliyorsa nedir?"],
+["h","Oyun"],
+["yn","27. Kedinizle oyun oynuyor musunuz?"],
+["t",">Ne sıklıkla?"],["t",">Ne tür oyunlar?"],["t",">Oyunu kim başlatıyor?"],
+["h","Davranış ve ilişkiler"],
+["a","28. Özellikle korktuğu bir şey (ses, kişi, cisim vb.) var mı?"],
+["n","29. Diğer kedilerle davranışı / ilişkisi"],
+["two",["a",">Evde"],["a",">Dışarıda"]],
+["n","30. İnsanlarla ilişkisi / davranışı"],
+["two",["a",">Aile üyeleri ile"],["a",">Yabancılarla"]],
+["h","Problem"],
+["a","31. Gözlemlenen problem(ler), detaylı"],
+["t",">Ne zaman başladı? (hatırlanıyorsa tam tarih)"],
+["a",">Nasıl ilerledi?"],
+["n","Denenen tedavi yöntemleri"],
+["t",">a) Feromonlar"],["t",">b) İlaçlar"],["a",">c) Varsa kendi müdahaleleri"],
+["h","Evin krokisi"],
+["s","Kroki","kroki",["İnsanların ve kedilerin giriş-çıkış noktaları","Dışarıyı gözlemleyebildikleri kapı, pencere, balkon","Mama ve su kapları, dinlenme ve uyku noktaları","Korktuklarında saklandıkları yerler","Girmelerinin yasak olduğu alanlar","Kum kapları; uygunsuz idrar/dışkı noktaları","Kediler arası çatışmaların en sık görüldüğü noktalar"]],
+["h","Klinik notları"],
+["s","Serbest çizim / not alanı","free"],
+["a","Hekim notu"]
+];
+const ONAM=[
+["h","Aydınlatılmış Onam Formu"],
+["p","T.C. Ankara Üniversitesi Rektörlüğü · Veteriner Fakültesi Dekanlığı · Hayvan Hastanesi","small"],
+["photo","Hasta etiketi (barkod)"],
+["p","Lütfen dikkatlice okuyunuz.","bold"],
+["p","Ankara Üniversitesi Veteriner Fakültesi Hayvan Hastanesi Davranış Kliniği'ne getirmiş olduğum hayvanıma, gerekli görülen sağlık hizmetlerinin sunulmasını uygun ve gerekli gördüğümü beyan ederim. Muayene, tanı ve tedavi uygulamaları dahil sunulacak tüm sağlık hizmetleri, olası riskler, beklenen yarar, hizmet ve ürün bedelleri hakkında detaylı olarak bilgilendirildim. Yapılacak muayene, tanı ve tedavi uygulamalarında ortaya çıkacak hizmet ve ürün bedellerini ödemeyi peşinen kabul ederim."],
+["p","Aldığım hizmet süresince elde edilecek olan muayene, hastalık geçmişi, görüntü ve ses kayıtları vb. tanı ve tedaviye yönelik tıbbi verilerin, kişisel bilgilerimin herhangi bir platformda kullanılmaması koşuluyla geriye dönük olarak değerlendirilebileceğini ve ilgili yasal prosedür dahilinde bilimsel amaçlarla kullanılabileceğini anladım."],
+["p","Eksik kaldığını düşündüğüm konularda sorularımı sordum ve doyurucu yanıtlar aldım. Yazılı ve sözlü olarak tarafıma sunulan tüm açıklamaları ayrıntılarıyla anladığım kanısındayım."],
+["p","Bu koşullar altında, uygulama kapsamında elde edilen bilgilerin gizlilik ilkesine uygun olarak değerlendirilmesini, sunulmasını, bilimsel amaçlarla kullanılmasını, hiçbir baskı ve zorlama altında kalmaksızın, kendi özgür irademle kabul ettiğimi ve yasal olarak reşit olduğumu beyan ederim."],
+["c","Kişisel verilerin korunması (KVKK)",["Okudum, onaylıyorum ve açık rıza veriyorum"]],
+["two",["t","Veteriner Hekim: Ad-Soyad"],["t","Hayvan Sahibi: Ad-Soyad"]],
+["two",["d","Veteriner Hekim: Tarih"],["d","Hayvan Sahibi: Tarih"]],
+["two",["s","Veteriner Hekim: İmza","sig"],["s","Hayvan Sahibi: İmza","sig"]],
+["p","Açıklama: Hayvan Hastanemizde aldığınız hizmet sırasında hayvanınızın durumu hakkında size bilgi verilecek, uygulanacak olan tedavi anlatılacak, farklı tedavi seçenekleri var ise bunlar arasından veteriner hekimin yönlendirmesi doğrultusunda makul bir tercih yapmanız beklenecektir. Bu form, adınıza kaydedilen hayvanın hastanemize bizzat sizin tarafınızdan getirildiğine, bilginiz/izniniz dahilinde hizmet aldığına ve bu uygulamalara ilişkin temel koşulları kabul ettiğinize dair onamınızı almak üzere hazırlanmıştır.","small"]
+];
+const IDENT={kopek:{"Adı Soyadı":"Sahip adı soyadı","Adres":"Adres","Telefon No":"Telefon","Email":"E-posta","İsim":"Hayvanın adı","Hayvan Sahibi: Ad-Soyad":"Onamdaki sahip adı"},
+  kedi:{"İsim Soyisim":"Sahip adı soyadı","Adres":"Adres","Telefon":"Telefon","E-posta":"E-posta","İsim":"Hayvanın adı","Hayvan Sahibi: Ad-Soyad":"Onamdaki sahip adı"}};
+const FORMS={kopek:{name:"Köpek Davranış Değerlendirme Formu",schema:[...KOPEK,...ONAM],pet:"İsim",owner:"Adı Soyadı",date:"Tarih"},
+             kedi:{name:"Kedi Davranış Ön Değerlendirme Formu",schema:[...KEDI,...ONAM],pet:"İsim",owner:"İsim Soyisim",date:"Tarih"}};
+
+const $=s=>document.querySelector(s);
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let kind=store.get("dk-kind")||"kopek",data={},items=[],pads={},driveOk=false,ocrOk=false,saving=false;
+let fingerOn=!!store.get("dk-finger"),inkCol="#17324a",inkEr=false,undoStack=[],act=null;
+const OCR_PADS=["note","free"];
+
+/* şema: bölüm sonlarına not alanı ekle, düz listeye çevir */
+function withNotes(schema){const out=[];let cur=null,hasS=false;
+  schema.forEach(f=>{if(f[0]==="h"){if(cur&&!hasS)out.push(["s","Notlar: "+cur.replace(/^[\dA-H]+\.\s*/,""),"note"]);cur=f[1];hasS=false}if(f[0]==="s")hasS=true;out.push(f)});return out}
+function flatten(schema){schema=withNotes(schema);const out=[];let n=0;const add=(f,inTwo)=>{if(f[0]==="two"){out.push({type:"two",kids:f.slice(1).map(k=>add(k,true))});return null}
+  let label=f[1]||"",sub=false;if(typeof label==="string"&&label.includes(">")){sub=true;label=label.replace(">","")}
+  const it={type:f[0],label,sub,id:"f"+(n++),a:f[2],b:f[3],c:f[4],tab:f[4]};if(!inTwo)out.push(it);return it};
+  schema.forEach(f=>add(f,false));return out}
+
+const box=(key,sz)=>`<div class="ink sz-${sz}" data-ink="${key}" role="img" aria-label="Kalemle yazma alanı"></div><div class="ocr" data-ocr="${key}"></div>`;
+function fieldHTML(it){const id=it.id,v=data[id],cls="f"+(it.sub?" in":"");
+  switch(it.type){
+  case"h":return `<h2 id="s-${id}">${esc(it.label)}</h2>`;
+  case"h3":return `<h3>${esc(it.label)}</h3>`;
+  case"n":return `<p class="note${it.sub?" in":""}">${esc(it.label)}</p>`;
+  case"p":return `<p class="para ${it.a||""}">${esc(it.label)}</p>`;
+  case"photo":return `<div class="f"><span class="l">${esc(it.label)}</span><div class="sticker${v?" has":""}">
+    <label class="shot"><input type="file" accept="image/*" capture="environment" data-photo="${id}" hidden>
+      ${v?`<img src="${esc(v)}" alt="Hasta etiketi fotoğrafı">`:`<span class="cam" aria-hidden="true"><svg viewBox="0 0 48 48" width="46" height="46"><rect x="5" y="14" width="38" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M17 14l3-5h8l3 5" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="24" cy="27" r="7" fill="none" stroke="currentColor" stroke-width="3"/></svg></span><span><b>Etiketi çekmek için dokunun</b><br><small>Kamera açılır; etiketin tamamı kareye girsin</small></span>`}
+    </label>${v?`<div class="chips"><button type="button" data-rephoto="${id}">Yeniden çek</button><button type="button" data-delphoto="${id}">Kaldır</button></div>`:""}</div></div>`;
+  case"d":return `<div class="${cls}"><label class="l" for="${id}">${esc(it.label)}</label><input type="date" id="${id}" data-id="${id}" value="${esc(v||"")}"></div>`;
+  case"t":case"a":return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span>${box(id,it.type)}</div>`;
+  case"num":return `<div class="${cls}${sesCls(id)}" data-fid="${id}"><span class="l">${esc(it.label)}</span><button type="button" class="numf" data-num="${id}">${numTxt(id)}</button>${sesNote(id)}</div>`;
+  case"yn":case"r":case"c":{const opts=it.type==="yn"?YN:it.a,multi=it.type==="c",sel=multi?(v||[]):v;
+    return `<div class="${cls}${sesCls(id)}" data-fid="${id}"><span class="l">${esc(it.label)}</span><div class="chips" role="group">${opts.map(o=>`<button type="button" class="chip" data-pick="${id}" data-multi="${multi?1:0}" data-v="${esc(o)}" aria-pressed="${multi?sel.includes(o):sel===o}">${esc(o)}</button>`).join("")}</div>${sesNote(id)}</div>`}
+  case"tb":{const cols=it.a,rows=it.b;
+    return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span><div class="scroll"><table class="stack"><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${Array.from({length:rows},(_,r)=>`<tr>${cols.map((c,ci)=>`<td data-l="${esc(c)}">${box(id+":"+r+":"+ci,"c")}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>`}
+  case"g":{const rows=it.a,cols=it.b,mode=it.c,val=v||{};
+    return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span><div class="scroll"><table class="${mode==="text"?"stack":""}"><thead><tr><th></th>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r,ri)=>`<tr><th>${esc(r)}</th>${cols.map((c,ci)=>{const k=ri+"_"+ci,x=val[k]||"";
+      return mode==="ehb"?`<td class="c${data["src_"+id+":"+k]?" ses":""}"><button type="button" class="ehb" data-g="${id}" data-k="${k}" data-v="${esc(x)}" aria-label="${esc(r)} – ${esc(c)}">${esc(x)||"–"}</button></td>`
+      :`<td data-l="${esc(c)}">${box(id+":"+k,"c")}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`}
+  case"s":{const h=(v&&v.h)||(it.a==="sig"?300:it.a==="kroki"?900:it.a==="note"?420:620);
+    return `<div class="${cls}"><span class="l">${esc(it.label)}</span>${it.b?`<ul class="hint">${it.b.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
+    <div class="pad"><div class="tools" data-tools="${id}">
+      ${["#17324a","#c4452b","#1f6f50","#2b62c4"].map((c,i)=>`<button type="button" class="dot" data-col="${c}" aria-label="Renk" aria-pressed="${i===0}"><i style="background:${c}"></i></button>`).join("")}
+      <button type="button" data-w="2" aria-pressed="false">İnce</button><button type="button" data-w="4" aria-pressed="true">Orta</button><button type="button" data-w="9" aria-pressed="false">Kalın</button>
+      <button type="button" data-er="1" aria-pressed="false">Silgi</button>
+      <button type="button" data-undo="1">Geri al</button><button type="button" data-clr="1">Temizle</button>${it.a!=="sig"?'<button type="button" data-grow="1">Alanı uzat</button>':""}
+    </div><canvas data-pad="${id}" data-kind="${it.a}" width="${it.a==="sig"?640:1200}" height="${h}" aria-label="${esc(it.label)} çizim alanı"></canvas></div>${OCR_PADS.includes(it.a)?`<div class="ocr" data-ocr="${id}"></div>`:""}</div>`}
+  case"two":return `<div class="two">${it.kids.map(fieldHTML).join("")}</div>`}
+  return""}
+
+function render(){document.body.classList.toggle("kedi",kind==="kedi");$("#bKopek").setAttribute("aria-pressed",kind==="kopek");$("#bKedi").setAttribute("aria-pressed",kind==="kedi");
+  const F=FORMS[kind];$("#title").textContent=F.name;items=flatten(F.schema);data=store.get("dk-draft-"+kind)||{};
+  if(!data.__started){allFields().filter(i=>i.type==="d"&&/Tarih$/.test(i.label)).forEach(i=>data[i.id]=today());data.__started=1}
+  $("#form").innerHTML=items.map(fieldHTML).join("");
+  $("#nav").innerHTML=items.filter(i=>i.type==="h").map(i=>`<a href="#s-${i.id}">${esc(i.label.replace(/^\d+\.\s*/,""))}</a>`).join("");
+  pads={};undoStack=[];document.querySelectorAll("canvas[data-pad]").forEach(setupPad);
+  document.querySelectorAll(".ink").forEach(w=>{const d=data["ink_"+w.dataset.ink];if(d){if(d.h)w.style.height=d.h+"px";if(d.s.length)fitInk(w)}});
+  document.querySelectorAll("[data-ocr]").forEach(el=>showOcr(el.dataset.ocr));
+  updPending();loadRecent()}
+
+const allFields=()=>items.flatMap(i=>i.type==="two"?i.kids:[i]);
+const byId=id=>allFields().find(i=>i.id===id);
+let tSave;function persist(){clearTimeout(tSave);tSave=setTimeout(()=>{store.set("dk-draft-"+kind,data);if(!saving)setStatus("Taslak tablette tutuldu · henüz Drive'a kaydedilmedi","")},300)}
+function setStatus(t,c){const s=$("#status");s.textContent=t;s.className="grow "+(c||"")}
+
+/* tarih ve düğmeler */
+$("#form").addEventListener("input",e=>{const t=e.target;if(t.dataset.id){data[t.dataset.id]=t.value;persist()}});
+$("#form").addEventListener("change",async e=>{const t=e.target;if(!t.dataset.photo||!t.files||!t.files[0])return;const id=t.dataset.photo;
+  setStatus("Fotoğraf hazırlanıyor…","");
+  try{const url=URL.createObjectURL(t.files[0]);const img=new Image();await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=url});
+    const k=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);data[id]=c.toDataURL("image/jpeg",.82);persist();rerenderPhoto(id);setStatus("Etiket fotoğrafı eklendi","ok")}
+  catch(x){setStatus("Fotoğraf okunamadı, tekrar deneyin","err")}});
+function rerenderPhoto(id){const el=document.querySelector(`[data-photo="${id}"]`).closest(".f");const tmp=document.createElement("div");tmp.innerHTML=fieldHTML(byId(id));el.replaceWith(tmp.firstElementChild)}
+$("#form").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.pick){const id=b.dataset.pick,v=b.dataset.v;
+    if(b.dataset.multi==="1"){const a=data[id]||[];data[id]=a.includes(v)?a.filter(x=>x!==v):[...a,v];b.setAttribute("aria-pressed",data[id].includes(v))}
+    else{data[id]=data[id]===v?"":v;b.parentNode.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===data[id]))}
+    persist()}
+  else if(b.dataset.rephoto){document.querySelector(`[data-photo="${b.dataset.rephoto}"]`).click()}
+  else if(b.dataset.delphoto){const id=b.dataset.delphoto;ask("Etiket fotoğrafı kaldırılsın mı?",()=>{delete data[id];persist();rerenderPhoto(id)})}
+  else if(b.classList.contains("ehb")){const seq=["","E","H","B"],n=seq[(seq.indexOf(b.dataset.v)+1)%4];b.dataset.v=n;b.textContent=n||"–";(data[b.dataset.g]=data[b.dataset.g]||{})[b.dataset.k]=n;persist()}
+  else{const tl=b.closest("[data-tools]");if(tl)padTool(tl.dataset.tools,b,tl)}});
+
+/* çizim: ortak */
+function drawStroke(ctx,s,from){ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle=s.c;const p=s.p;
+  if(p.length===1){ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(p[0][0],p[0][1],s.w/2,0,7);ctx.fill();return}
+  for(let i=Math.max(1,from||1);i<p.length;i++){ctx.lineWidth=s.w*(.55+p[i][2]*.9);ctx.beginPath();ctx.moveTo(p[i-1][0],p[i-1][1]);ctx.lineTo(p[i][0],p[i][1]);ctx.stroke()}}
+const touched=o=>{o.v=(o.v||0)+1;o.dirty=true};
+
+/* büyük çizim alanları */
+function setupPad(cv){const id=cv.dataset.pad,ctx=cv.getContext("2d");const P={cv,ctx,kind:cv.dataset.kind,strokes:(data[id]&&data[id].s)||[],col:"#17324a",w:4,er:false,cur:null,scr:null};pads[id]=P;
+  const pt=e=>{const r=cv.getBoundingClientRect();return[Math.round((e.clientX-r.left)*cv.width/r.width*10)/10,Math.round((e.clientY-r.top)*cv.height/r.height*10)/10,Math.round((e.pressure||.5)*100)/100,Math.round(performance.timeOrigin+performance.now())]};
+  cv.addEventListener("pointerdown",e=>{if(e.button>0)return;if(e.pointerType==="touch"&&!fingerOn){P.scr=e.clientY;return}
+    cv.setPointerCapture(e.pointerId);P.cur={c:P.er?"#ffffff":P.col,w:P.er?P.w*5:P.w,p:[pt(e)]};P.strokes.push(P.cur);e.preventDefault()});
+  cv.addEventListener("pointermove",e=>{if(P.scr!==null){scrollBy(0,P.scr-e.clientY);P.scr=e.clientY;return}if(!P.cur)return;
+    const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];evs.forEach(x=>P.cur.p.push(pt(x)));drawStroke(ctx,P.cur,P.cur.p.length-evs.length)});
+  const end=()=>{P.scr=null;if(!P.cur)return;P.cur=null;savePad(id,true)};cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
+  redraw(P)}
+function redraw(P){P.ctx.fillStyle="#ffffff";P.ctx.fillRect(0,0,P.cv.width,P.cv.height);P.strokes.forEach(s=>drawStroke(P.ctx,s,1))}
+function savePad(id,changed){const P=pads[id],o=data[id]||{};o.s=P.strokes;o.h=P.cv.height;data[id]=o;if(changed&&OCR_PADS.includes(P.kind)){touched(o);scheduleOcr()}persist()}
+function padTool(id,b,tl){const P=pads[id];
+  if(b.dataset.col){P.col=b.dataset.col;P.er=false;tl.querySelectorAll("[data-col],[data-er]").forEach(x=>x.setAttribute("aria-pressed",x===b))}
+  else if(b.dataset.w){P.w=+b.dataset.w;tl.querySelectorAll("[data-w]").forEach(x=>x.setAttribute("aria-pressed",x===b))}
+  else if(b.dataset.er){P.er=!P.er;b.setAttribute("aria-pressed",P.er);if(P.er)tl.querySelectorAll("[data-col]").forEach(x=>x.setAttribute("aria-pressed",false))}
+  else if(b.dataset.undo){P.strokes.pop();redraw(P);savePad(id,true)}
+  else if(b.dataset.grow){P.cv.height+=400;redraw(P);savePad(id,false);P.cv.scrollIntoView({block:"end",behavior:"smooth"})}
+  else if(b.dataset.clr){ask("Bu çizim alanı tamamen temizlensin mi?",()=>{P.strokes=[];redraw(P);savePad(id,true)})}}
+
+/* yazı kutuları */
+function fitInk(w){let c=w.querySelector("canvas");if(!c){c=document.createElement("canvas");w.append(c)}
+  const d=Math.min(devicePixelRatio||1,2),W=w.clientWidth,H=w.clientHeight;c.style.width=W+"px";c.style.height=H+"px";c.width=Math.round(W*d);c.height=Math.round(H*d);
+  const x=c.getContext("2d");x.setTransform(d,0,0,d,0,0);(data["ink_"+w.dataset.ink]?.s||[]).forEach(s=>drawStroke(x,s,1));return c}
+function inkPt(w,e){const r=w.getBoundingClientRect();return[Math.round((e.clientX-r.left)*10)/10,Math.round((e.clientY-r.top)*10)/10,Math.round((e.pressure||.5)*100)/100,Math.round(performance.timeOrigin+performance.now())]}
+function growField(w){const h=w.offsetHeight+48;w.style.height=h+"px";const d=data["ink_"+w.dataset.ink];if(d)d.h=h;fitInk(w)}
+function eraseAt(w,p){const d=data["ink_"+w.dataset.ink];if(!d)return false;const n=d.s.length;d.s=d.s.filter(s=>!s.p.some(q=>Math.hypot(q[0]-p[0],q[1]-p[1])<12));if(d.s.length!==n){fitInk(w);return true}return false}
+const F_=$("#form");
+F_.addEventListener("pointerdown",e=>{const w=e.target.closest(".ink");if(!w)return;
+  if(e.pointerType==="touch"&&!fingerOn){act={t:"scroll",y:e.clientY};return}
+  if(e.button>0)return;e.preventDefault();w.setPointerCapture(e.pointerId);const p=inkPt(w,e),key=w.dataset.ink;
+  if(inkEr){act={t:"er",w,hit:eraseAt(w,p)};return}
+  const d=(data["ink_"+key]=data["ink_"+key]||{s:[]}),s={c:inkCol,w:2.2,p:[p]};d.s.push(s);undoStack.push(key);
+  const c=w.querySelector("canvas")||fitInk(w);act={t:"ink",w,c,s};drawStroke(c.getContext("2d"),s)});
+F_.addEventListener("pointermove",e=>{if(!act)return;
+  if(act.t==="scroll"){scrollBy(0,act.y-e.clientY);act.y=e.clientY;return}
+  const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+  if(act.t==="er"){evs.forEach(x=>{if(eraseAt(act.w,inkPt(act.w,x)))act.hit=true});return}
+  const n=act.s.p.length;evs.forEach(x=>act.s.p.push(inkPt(act.w,x)));
+  if(act.s.p[act.s.p.length-1][1]>act.w.clientHeight-10){growField(act.w);act.c=act.w.querySelector("canvas")}
+  drawStroke(act.c.getContext("2d"),act.s,n)});
+const inkEnd=()=>{if(!act)return;if(act.t==="ink"||(act.t==="er"&&act.hit)){touched(data["ink_"+act.w.dataset.ink]);scheduleOcr();persist()}act=null};
+F_.addEventListener("pointerup",inkEnd);F_.addEventListener("pointercancel",inkEnd);
+function setFinger(on){fingerOn=on;store.set("dk-finger",on);$("#bFinger").setAttribute("aria-pressed",on);$("#bFinger").textContent=on?"Parmakla yazma açık":"Parmakla yazma kapalı"}
+$("#bFinger").addEventListener("click",()=>setFinger(!fingerOn));
+document.querySelectorAll("[data-ic]").forEach(b=>b.addEventListener("click",()=>{inkCol=b.dataset.ic;inkEr=false;$("#bEr").setAttribute("aria-pressed",false);document.querySelectorAll("[data-ic]").forEach(x=>x.setAttribute("aria-pressed",x===b))}));
+$("#bEr").addEventListener("click",()=>{inkEr=!inkEr;$("#bEr").setAttribute("aria-pressed",inkEr)});
+$("#bUndo").addEventListener("click",()=>{const k=undoStack.pop();if(!k)return;const d=data["ink_"+k];if(d&&d.s.length){d.s.pop();touched(d);const w=document.querySelector(`.ink[data-ink="${k}"]`);if(w)fitInk(w);scheduleOcr();persist()}});
+let rT;addEventListener("resize",()=>{clearTimeout(rT);rT=setTimeout(()=>document.querySelectorAll(".ink").forEach(w=>{const d=data["ink_"+w.dataset.ink];if(d&&d.s.length)fitInk(w)}),200)});
+
+/* el yazısını görüntüye çevirme */
+function cropCanvas(strokes,sc){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  strokes.forEach(s=>s.p.forEach(q=>{x0=Math.min(x0,q[0]);y0=Math.min(y0,q[1]);x1=Math.max(x1,q[0]);y1=Math.max(y1,q[1])}));
+  const pd=8,W=x1-x0+pd*2,H=y1-y0+pd*2,c=document.createElement("canvas");c.width=Math.ceil(W*sc);c.height=Math.ceil(H*sc);
+  const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.setTransform(sc,0,0,sc,(pd-x0)*sc,(pd-y0)*sc);strokes.filter(s=>s.c!=="#ffffff").forEach(s=>drawStroke(x,s,1));
+  c.cssW=W;return c}
+function inkImg(k,maxW){const d=data["ink_"+k];if(!d||!d.s||!d.s.length)return"";const c=cropCanvas(d.s,2);
+  return `<img src="${c.toDataURL("image/png")}" width="${Math.round(Math.min(c.cssW,maxW))}">`}
+
+/* el yazısını metne çevirme (Claude okur) */
+let ocrBusy=null,ocrOff="",tO;
+function keyLabel(key){const [id,a,b]=key.split(":"),it=byId(id);if(!it)return"";
+  if(it.type==="tb")return `${it.label} tablosu, "${it.a[+b]}" sütunu, ${+a+1}. satır`;
+  if(it.type==="g"){const [ri,ci]=a.split("_");return `${it.label}: ${it.a[+ri]} / ${it.b[+ci]}`}
+  return it.label}
+function pendingList(){const out=[];
+  for(const k in data){if(k.startsWith("ink_")&&data[k].dirty)out.push({key:k.slice(4),o:data[k],pad:false})}
+  for(const id in pads){if(OCR_PADS.includes(pads[id].kind)&&data[id]&&data[id].dirty)out.push({key:id,o:data[id],pad:true})}
+  return out}
+function showOcr(key){const el=document.querySelector(`[data-ocr="${CSS.escape(key)}"]`);if(!el)return;
+  const o=key.includes(":")||!pads[key]?data["ink_"+key]:data[key],t=data["txt_"+key]||"";el.textContent="";el.className="ocr";
+  if(o&&o.dirty&&o.s&&o.s.length&&ocrOk&&!ocrOff){el.classList.add("wait");el.textContent=t?t+"  (güncelleniyor…)":"okunacak…";return}
+  const src=data["src_"+key];
+  if(t){const b=document.createElement("b");b.textContent=src?"Sesten: ":"Okunan: ";el.append(b,t);if(src){el.classList.add("ses");const x=document.createElement("button");x.type="button";x.className="unses";x.dataset.unses=key;x.textContent="Kaldır";el.append(" ",x)}}}
+function updPending(){const n=pendingList().filter(p=>p.o.s&&p.o.s.length).length,b=$("#bOcr");
+  b.hidden=!ocrOk;b.textContent=n?`Yazıları metne çevir (${n})`:"Yazılar okundu";b.disabled=!n||!!ocrBusy;
+  $("#ocrNote").textContent=ocrOff}
+function scheduleOcr(){clearTimeout(tO);if(ocrOk&&!ocrOff)tO=setTimeout(()=>runOcr(),4000);updPending();document.querySelectorAll("[data-ocr]").forEach(el=>{const k=el.dataset.ocr,o=pads[k]&&!k.includes(":")?data[k]:data["ink_"+k];if(o&&o.dirty)showOcr(k)})}
+function runOcr(){if(ocrBusy)return ocrBusy.then(()=>pendingList().length?runOcr():null);
+  ocrBusy=(async()=>{const list=pendingList();if(!list.length||!ocrOk)return;
+    list.filter(p=>!p.o.s||!p.o.s.length).forEach(p=>{data["txt_"+p.key]="";p.o.dirty=false;showOcr(p.key)});
+    const todo=list.filter(p=>p.o.s&&p.o.s.length);if(!todo.length){persist();return}
+    const max=Math.max(1,BK.maxImages||1);updPending();
+    for(let i=0;i<todo.length;i+=max){const batch=todo.slice(i,i+max),vers=batch.map(p=>p.o.v);
+      if(BK.recognizeInk){let arr;
+        try{arr=await BK.recognizeInk(batch.map(p=>({lines:inkLines(p.o.s)})))}
+        catch(e){ocrOff="El yazısı tanınamadı ("+BK.errKind(e)+"). \"Yazıları metne çevir\"e basarak tekrar deneyebilirsiniz.";batch.forEach(p=>showOcr(p.key));return}
+        batch.forEach((p,j)=>{if(p.o.v===vers[j]){data["txt_"+p.key]=String((arr&&arr[j])||"").trim();delete data["src_"+p.key];p.o.dirty=false}showOcr(p.key)});persist();continue}
+      const imgs=batch.map(p=>cropCanvas(p.o.s,p.pad?1:2.5));
+      const prompt=`Görüntüler bir veteriner davranış kliniği değerlendirme formundaki kalemle yazılmış Türkçe el yazılarıdır. Her görüntüde yazılanı aynen metne çevir. Düzeltme, yorum veya ekleme yapma; kısaltmaları olduğu gibi bırak; Türkçe karakterleri (ç ğ ı İ ö ş ü) doğru kullan. Okunamayan kelimeye [?] yaz. Görüntüde yazı değil çizim varsa boş metin ver.\nGörüntülerin ait olduğu alanlar:\n${batch.map((p,j)=>`${j+1}. ${keyLabel(p.key)||"not alanı"}`).join("\n")}\nYalnızca şu biçimde bir JSON nesnesi döndür: {"1":"metin","2":"metin"}`;
+      let res;
+      try{res=await BK.ocr(prompt,imgs)}
+      catch(e){const c=BK.errKind(e);
+        if(c==="off")ocrOff="El yazısını okumaya izin verilmedi; yazılar Drive'a resim olarak gidecek.";
+        else if(c==="rate")ocrOff="Okuma şimdilik sınıra takıldı. Biraz sonra \"Yazıları metne çevir\"e basın.";
+        else ocrOff="Okuma yapılamadı ("+c+"). \"Yazıları metne çevir\"e basarak tekrar deneyebilirsiniz.";
+        batch.forEach(p=>showOcr(p.key));return}
+      batch.forEach((p,j)=>{const t=res&&res[String(j+1)];if(p.o.v===vers[j]){data["txt_"+p.key]=typeof t==="string"?t.trim():"";delete data["src_"+p.key];p.o.dirty=false}showOcr(p.key)});
+      persist()}})().finally(()=>{ocrBusy=null;updPending()});
+  updPending();return ocrBusy}
+$("#bOcr").addEventListener("click",()=>{ocrOff="";clearTimeout(tO);runOcr()});
+
+/* sayı tuş takımı */
+const fmtNum=v=>String(v).replace(".",",");
+function numTxt(id){const it=byId(id),v=data[id];return v!==undefined&&v!==""?`${esc(fmtNum(v))}<small>${esc(it&&it.a||"")}</small>`:'<span class="ph">Dokunun, sayı girin</span>'}
+let npId=null,npBuf="";
+function npShow(){$("#npVal").textContent=npBuf?fmtNum(npBuf):"";}
+$("#form").addEventListener("click",e=>{const b=e.target.closest("[data-num]");if(!b)return;npId=b.dataset.num;const it=byId(npId);
+  npBuf=data[npId]!==undefined?String(data[npId]):"";$("#npLabel").textContent=it.label+(it.a?` (${it.a})`:"");npShow();$("#np").classList.add("on")});
+$("#np").addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b)return;const k=b.dataset.k;
+  if(/^\d$/.test(k)){if(npBuf.replace(".","").length<6)npBuf=(npBuf==="0"?"":npBuf)+k}
+  else if(k===","){if(!npBuf.includes("."))npBuf=(npBuf||"0")+"."}
+  else if(k==="del")npBuf=npBuf.slice(0,-1);
+  else if(k==="clr")npBuf="";
+  else if(k==="no"){$("#np").classList.remove("on");return}
+  else if(k==="ok"){const v=npBuf.replace(/\.$/,"");if(v==="")delete data[npId];else data[npId]=v;persist();
+    const el=document.querySelector(`[data-num="${npId}"]`);if(el)el.innerHTML=numTxt(npId);$("#np").classList.remove("on");return}
+  npShow()});
+
+/* tabloya yazılacak satırlar */
+function recId(){if(!data.__rec){const d=new Date(),z=n=>String(n).padStart(2,"0");
+  data.__rec=(kind==="kopek"?"K":"C")+"-"+d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+"-"+z(d.getHours())+z(d.getMinutes())+"-"+Math.random().toString(36).slice(2,6).toUpperCase()}return data.__rec}
+function sheetData(docUrl){const KN=kind==="kopek"?"Köpek":"Kedi",ID=IDENT[kind],rid=recId(),now=new Date().toLocaleString("tr-TR");
+  const main={"Kayıt No":rid,"Kayıt zamanı":now},ident={"Kayıt No":rid,"Tür":KN,"Kayıt zamanı":now,"Belge":docUrl||""},tables=[];
+  const txt=k=>{const d=data["ink_"+k],t=data["txt_"+k];return t||(d&&d.s&&d.s.length?"(okunmadı)":"")};
+  let sec="",parent="";const used={};
+  const H=(it,extra)=>{let h=sec+" | "+(it.sub&&parent?parent.slice(0,50)+" → ":"")+it.label+(extra?" → "+extra:"");h=h.replace(/\s+/g," ").trim();let k=h,n=2;while(used[k]&&used[k]!==it.id+(extra||""))k=h+" ("+(n++)+")";used[k]=it.id+(extra||"");return k};
+  const one=it=>{const v=data[it.id];
+    if(it.type==="h"){sec=it.label;parent="";return}
+    if(["h3","n","p"].includes(it.type))return;
+    if(!it.sub)parent=it.label;
+    if(ID[it.label]!==undefined&&["t","a"].includes(it.type)){ident[ID[it.label]]=txt(it.id);return}
+    switch(it.type){
+    case"d":case"yn":case"r":main[H(it)]=v||"";break;
+    case"num":main[H(it)]=v!==undefined&&v!==""?Number(v):"";break;
+    case"c":it.a.forEach(o=>main[H(it,o)]=(v||[]).includes(o)?1:0);break;
+    case"t":case"a":main[H(it)]=txt(it.id);break;
+    case"g":it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=ri+"_"+ci;main[H(it,r+" / "+c)]=it.c==="ehb"?((v||{})[k]||""):txt(it.id+":"+k)}));break;
+    case"s":main[H(it)]=["note","free"].includes(it.a)?txt(it.id):((v&&v.s&&v.s.length)?"var":"");break;
+    case"photo":main[H(it)]=v?"var":"";break;
+    case"tb":{const tab=KN+" - "+(it.tab||it.label.slice(0,30)),skip=c=>/^İsim/.test(c)&&/Aile|misafir/i.test(it.tab||"");const rows=[];
+      for(let r=0;r<it.b;r++){const vals=it.a.map((c,ci)=>txt(it.id+":"+r+":"+ci));if(vals.some(x=>x)){const o={"Kayıt No":rid,"Satır":r+1};it.a.forEach((c,ci)=>{if(!skip(c))o[c]=vals[ci]});rows.push(o)}}
+      if(rows.length)tables.push({tab,rows});main[H(it)+" (satır sayısı)"]=rows.length;break}}};
+  items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));
+  return[{tab:KN,rows:[main]},{tab:"Kimlik",rows:[ident]},...tables]}
+
+/* kalem izlerini satırlara ayır (cihaz içi tanıma satır satır daha iyi okur) */
+function inkLines(strokes){const S=strokes.filter(s=>s.c!=="#ffffff"&&s.p.length).map((s,i)=>{let y0=1e9,y1=-1e9,x0=1e9,x1=-1e9;s.p.forEach(q=>{y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1]);x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0])});return{s,i,y0,y1,x0,x1,cy:(y0+y1)/2}}).sort((a,b)=>a.cy-b.cy);
+  const L=[];S.forEach(st=>{const l=L.find(l=>{const tol=Math.max(8,(l.y1-l.y0)*.45);return st.cy>=l.y0-tol&&st.cy<=l.y1+tol});
+    if(l){l.m.push(st);if(st.y1-st.y0<(l.y1-l.y0)*2.2){l.y0=Math.min(l.y0,st.y0);l.y1=Math.max(l.y1,st.y1)}}else L.push({y0:st.y0,y1:st.y1,m:[st]})});
+  return L.sort((a,b)=>a.y0-b.y0).map(l=>{const m=l.m.sort((a,b)=>a.i-b.i);let x0=1e9,x1=-1e9;m.forEach(st=>{x0=Math.min(x0,st.x0);x1=Math.max(x1,st.x1)});
+    return{w:Math.max(1,x1-x0),h:Math.max(1,l.y1-l.y0),strokes:m.map(st=>st.s.p.map(q=>[Math.round(q[0]-x0),Math.round(q[1]-l.y0),q[3]||0]))}})}
+
+/* görüşme sırasında sesle doldurma */
+const sesCls=id=>data["src_"+id]?" ses":"";
+function sesNote(id){const s=data["src_"+id];return s?`<div class="sesnote"><b>Sesten</b>${s.q?` · “${esc(s.q)}”`:""} <button type="button" class="unses" data-unses="${id}">Kaldır</button></div>`:""}
+function rerenderField(id){const el=document.querySelector(`[data-fid="${CSS.escape(id)}"]`),it=byId(id);if(!el||!it)return;const t=document.createElement("div");t.innerHTML=fieldHTML(it);const n=t.firstElementChild;el.replaceWith(n);
+  n.querySelectorAll(".ink").forEach(w=>{const d=data["ink_"+w.dataset.ink];if(d){if(d.h)w.style.height=d.h+"px";if(d.s.length)fitInk(w)}});n.querySelectorAll("[data-ocr]").forEach(e=>showOcr(e.dataset.ocr))}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-unses]");if(!b)return;const k=b.dataset.unses,[id,a]=k.split(":"),it=byId(id);
+  delete data["src_"+k];if(!it){persist();return}
+  if(it.type==="g"&&it.c==="ehb"){const g=data[id]||{};delete g[a];data[id]=g}else if(k.includes(":")||["t","a"].includes(it.type))delete data["txt_"+k];else delete data[id];
+  persist();rerenderField(id)});
+const SES={on:false,busy:false,last:0,lastLen:0,t0:0,timer:null,loop:null,partial:""};
+const isEmptyInk=k=>{const d=data["ink_"+k];return!(d&&d.s&&d.s.length)&&!data["txt_"+k]};
+function sesQuestions(){const out=[];let sec="",parent="";
+  const one=it=>{if(it.type==="h"){sec=it.label;parent="";return}if(/Onam/.test(sec))return;if(["h3","n","p","s","photo"].includes(it.type))return;if(!it.sub)parent=it.label;
+    const s=(sec?sec+" › ":"")+(it.sub&&parent!==it.label?parent+" → ":"")+it.label,v=data[it.id];
+    switch(it.type){
+    case"yn":if(!v)out.push({id:it.id,s,t:"yn"});break;
+    case"r":if(!v)out.push({id:it.id,s,t:"r",o:it.a});break;
+    case"c":if(!(v||[]).length)out.push({id:it.id,s,t:"c",o:it.a});break;
+    case"num":if(v===undefined||v==="")out.push({id:it.id,s,t:"num",u:it.a});break;
+    case"d":if(!v)out.push({id:it.id,s,t:"d"});break;
+    case"t":case"a":if(isEmptyInk(it.id))out.push({id:it.id,s,t:it.type});break;
+    case"tb":{let empty=true;for(let r=0;r<it.b;r++)for(let c=0;c<it.a.length;c++)if(!isEmptyInk(it.id+":"+r+":"+c))empty=false;if(empty)out.push({id:it.id,s,t:"tb",o:it.a,max:it.b});break}
+    case"g":it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=ri+"_"+ci;if(it.c==="ehb"){if(!(v||{})[k])out.push({id:it.id+":"+k,s:s+" — "+r+" / "+c,t:"ehb"})}else if(isEmptyInk(it.id+":"+k))out.push({id:it.id+":"+k,s:s+" — "+r+" / "+c,t:"t"})}));break}};
+  items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));return out}
+function applySes(list){const touchedF=new Set();let n=0;
+  (list||[]).forEach(c=>{if(!c||typeof c.id!=="string")return;const [id,k]=c.id.split(":"),it=byId(id);if(!it)return;const q=String(c.alinti||"").slice(0,140),val=c.deger;
+    const mark=key=>{data["src_"+key]={q};touchedF.add(id);n++};
+    if(it.type==="g"&&k!==undefined){const [ri,ci]=k.split("_");if(it.a[+ri]===undefined||it.b[+ci]===undefined)return;
+      if(it.c==="ehb"){const g=data[id]||{};if(!g[k]&&["E","H","B"].includes(val)){g[k]=val;data[id]=g;mark(id+":"+k)}}
+      else if(isEmptyInk(id+":"+k)&&val){data["txt_"+id+":"+k]=String(val);mark(id+":"+k)}return}
+    switch(it.type){
+    case"yn":if(!data[id]&&YN.includes(val)){data[id]=val;mark(id)}break;
+    case"r":if(!data[id]&&it.a.includes(val)){data[id]=val;mark(id)}break;
+    case"c":{const a=(Array.isArray(val)?val:[val]).filter(x=>it.a.includes(x));if(!(data[id]||[]).length&&a.length){data[id]=a;mark(id)}break}
+    case"num":{const x=Number(String(val).replace(",","."));if((data[id]===undefined||data[id]==="")&&isFinite(x)&&String(val).trim()!==""){data[id]=String(Math.round(x*100)/100);mark(id)}break}
+    case"d":if(!data[id]&&/^\d{4}-\d{2}-\d{2}$/.test(String(val))){data[id]=val;mark(id)}break;
+    case"t":case"a":if(isEmptyInk(id)&&val){data["txt_"+id]=String(val);mark(id)}break;
+    case"tb":{const rows=Array.isArray(c.satirlar)?c.satirlar:Array.isArray(val)?val:[];rows.slice(0,it.b).forEach((row,r)=>(Array.isArray(row)?row:[row]).slice(0,it.a.length).forEach((x,ci)=>{const key=id+":"+r+":"+ci;if(x&&isEmptyInk(key)){data["txt_"+key]=String(x);data["src_"+key]={q};touchedF.add(id);n++}}));break}}});
+  if(n){persist();touchedF.forEach(rerenderField)}return n}
+function sesUI(){const b=$("#bSes");if(!b)return;b.hidden=!(BK.speech&&BK.sesOn);b.setAttribute("aria-pressed",SES.on);
+  b.textContent=SES.on?"Kaydı bitir":"Görüşmeyi dinle";$("#sesBar").hidden=!SES.on&&!SES.final;
+  if(SES.on){const s=Math.floor((Date.now()-SES.t0)/1000);$("#sesTime").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+  const d=data.__dokum||"";$("#sesText").textContent=(d.length>320?"…"+d.slice(-320):d)+(SES.partial?" "+SES.partial:"")}
+async function sesRun(final){if(SES.busy||!BK.sesleDoldur)return;const d=data.__dokum||"";if(!d.trim())return;
+  const qs=sesQuestions();if(!qs.length)return;SES.busy=true;$("#sesState").textContent=final?"Tüm görüşme taranıyor…":"Cevaplar çıkarılıyor…";
+  try{const win=final?d.slice(-60000):d.slice(Math.max(0,SES.lastLen-600)).slice(-4000);SES.lastLen=d.length;
+    const r=await BK.sesleDoldur(win,qs,!!final);const n=applySes(r&&r.cevaplar);
+    SES.filled=(SES.filled||0)+n;$("#sesState").textContent=`${SES.filled} alan sesten dolduruldu`}
+  catch(e){$("#sesState").textContent="Cevap çıkarılamadı: "+BK.errKind(e)}
+  SES.busy=false}
+function sesStart(){if(!BK.speech)return;
+  ask("Hasta sahibinden görüşmenin dinlenip yazıya dökülmesi için onay alındı mı? Ses kaydedilmez, yalnızca yazıya dökülen metin forma eklenir.",async()=>{
+    data.__sesOnay=new Date().toLocaleString("tr-TR");persist();
+    try{await BK.speech.start()}catch(e){$("#sesState").textContent="Mikrofon açılamadı: "+BK.errKind(e);return}
+    SES.on=true;SES.final=false;SES.t0=Date.now();SES.lastLen=(data.__dokum||"").length;$("#sesState").textContent="Dinleniyor";
+    SES.timer=setInterval(sesUI,1000);SES.loop=setInterval(()=>{const d=data.__dokum||"";if(d.length-SES.lastLen>60)sesRun(false)},30000);sesUI()},"Onay alındı, başlat")}
+async function sesStop(){if(!SES.on)return;SES.on=false;clearInterval(SES.timer);clearInterval(SES.loop);try{await BK.speech.stop()}catch(e){}
+  SES.final=true;sesUI();await sesRun(true);persist()}
+if(BK.on){BK.on("final",m=>{if(!m.text)return;data.__dokum=((data.__dokum||"")+" "+m.text).trim();SES.partial="";persist();sesUI()});
+  BK.on("partial",m=>{SES.partial=m.text||"";sesUI()});
+  BK.on("state",m=>{if(m.state==="idle"&&SES.on&&m.reason&&m.reason!=="stopped"){$("#sesState").textContent="Dinleme durdu: "+m.reason}});
+  BK.on("status",m=>{if(m.text)setStatus(m.text,"")})}
+$("#bSes").addEventListener("click",()=>SES.on?sesStop():sesStart());
+
+/* onay penceresi */
+let dlgCb=null;function ask(t,cb,yes){$("#dlgText").textContent=t;$("#dlgYes").textContent=yes||"Evet";dlgCb=cb;$("#dlg").classList.add("on");$("#dlgYes").focus()}
+$("#dlgYes").addEventListener("click",()=>{$("#dlg").classList.remove("on");dlgCb&&dlgCb()});
+$("#dlgNo").addEventListener("click",()=>$("#dlg").classList.remove("on"));
+
+/* Drive belgesi */
+function docBody(){const out=[],dash='<span style="color:#999">—</span>';
+  const txtLine=k=>{const t=data["txt_"+k];return t?`<br><span style="color:#444">Okunan metin: ${esc(t).replace(/\n/g,"<br>")}</span>`:""};
+  const one=it=>{const v=data[it.id],pad=it.sub?"margin-left:24px;":"";
+    switch(it.type){
+    case"h":out.push(`<h2 style="color:#17324a">${esc(it.label)}</h2>`);break;
+    case"h3":out.push(`<h3>${esc(it.label)}</h3>`);break;
+    case"n":out.push(`<p style="${pad}"><i>${esc(it.label)}</i></p>`);break;
+    case"p":out.push(it.a==="bold"?`<p><b>${esc(it.label)}</b></p>`:it.a==="small"?`<p style="font-size:9pt;color:#444">${esc(it.label)}</p>`:`<p style="text-align:justify">${esc(it.label)}</p>`);break;
+    case"photo":out.push(`<p><b>${esc(it.label)}</b><br>${v&&/^data:image\/jpeg;base64,/.test(v)?`<img src="${v}" width="340">`:dash}</p>`);break;
+    case"t":case"a":{const im=inkImg(it.id,560),t=data["txt_"+it.id];out.push(`<p style="${pad}"><b>${esc(it.label)}</b><br>${im?im+txtLine(it.id):t?esc(t).replace(/\n/g,"<br>")+(data["src_"+it.id]?' <span style="color:#888">(sesten)</span>':""):dash}</p>`);break}
+    case"num":out.push(`<p style="${pad}"><b>${esc(it.label)}</b><br>${v!==undefined&&v!==""?esc(fmtNum(v)+" "+(it.a||"")):dash}</p>`);break;
+    case"d":case"yn":case"r":out.push(`<p style="${pad}"><b>${esc(it.label)}</b><br>${v?esc(it.type==="d"?v.split("-").reverse().join("."):v):dash}</p>`);break;
+    case"c":out.push(`<p style="${pad}"><b>${esc(it.label)}</b><br>${(v&&v.length)?v.map(x=>"☑ "+esc(x)).join("<br>"):dash}</p>`);break;
+    case"tb":{const has=k=>{const d=data["ink_"+k];return d&&d.s&&d.s.length};
+      const rows=Array.from({length:it.b},(_,r)=>r).filter(r=>it.a.some((c,ci)=>has(it.id+":"+r+":"+ci)||data["txt_"+it.id+":"+r+":"+ci]));
+      out.push(`<p style="${pad}"><b>${esc(it.label)}</b></p>`);
+      out.push(rows.length?`<table border="1" cellpadding="5" style="border-collapse:collapse"><tr>${it.a.map(c=>`<th style="background:#eef2f5">${esc(c)}</th>`).join("")}</tr>${rows.map(r=>`<tr>${it.a.map((c,i)=>{const k=it.id+":"+r+":"+i;return `<td>${inkImg(k,200)}${data["txt_"+k]?(has(k)?"<br>":"")+esc(data["txt_"+k]):""}</td>`}).join("")}</tr>`).join("")}</table>`:`<p style="${pad}">${dash}</p>`);break}
+    case"g":{const g=v||{};out.push(`<p><b>${esc(it.label)}</b>${it.c==="ehb"?" (E: Evet, H: Hayır, B: Bilmiyorum)":""}</p><table border="1" cellpadding="5" style="border-collapse:collapse"><tr><th></th>${it.b.map(c=>`<th style="background:#eef2f5">${esc(c)}</th>`).join("")}</tr>${it.a.map((r,ri)=>`<tr><th style="text-align:left">${esc(r)}</th>${it.b.map((c,ci)=>{const k=it.id+":"+ri+"_"+ci;
+      return `<td>${it.c==="ehb"?esc(g[ri+"_"+ci]||""):inkImg(k,220)+(data["txt_"+k]?"<br>"+esc(data["txt_"+k]):"")}</td>`}).join("")}</tr>`).join("")}</table>`);break}
+    case"s":{const P=pads[it.id];out.push(`<p><b>${esc(it.label)}</b></p>`);
+      if(P&&P.strokes.length){const w=it.a==="sig"?300:620;out.push(`<p><img src="${P.cv.toDataURL("image/png")}" width="${w}">${txtLine(it.id)}</p>`)}else out.push(`<p>${dash}</p>`);break}}};
+  items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));
+  const srcN=Object.keys(data).filter(k=>k.startsWith("src_")).length;
+  if(data.__dokum){out.push(`<h2 style="color:#17324a">Görüşme dökümü (otomatik)</h2><p style="font-size:9pt;color:#444">Dinleme onayı: ${esc(data.__sesOnay||"")} · Sesten doldurulan alan: ${srcN}. Döküm otomatik çeviridir, hatalı kelimeler içerebilir.</p><p style="font-size:10pt">${esc(data.__dokum)}</p>`)}
+  return out.join("\n")}
+function meta(){const F=FORMS[kind],f=allFields(),get=(l,typed)=>{const i=f.find(x=>x.label===l);return i?(typed?data[i.id]:data["txt_"+i.id])||"":""};
+  return{pet:get(F.pet).trim(),owner:get(F.owner).trim(),date:get(F.date,true)||today()}}
+
+function save(){if(saving)return;
+  if(!driveOk){setStatus(BK.noDrive,"err");return}
+  const kv=allFields().find(i=>i.type==="c"&&i.label.startsWith("Kişisel verilerin korunması"));
+  const go=()=>{if(kv&&!(data[kv.id]||[]).length){ask("KVKK açık rıza kutusu işaretlenmedi. Form yine de kaydedilsin mi?",doSave,"Yine de kaydet");return}doSave()};
+  if(data.__savedAt){ask("Bu form daha önce kaydedildi. Tekrar kaydetmek yeni bir belge ve tabloda aynı kayıt numarasıyla yeni bir satır oluşturur. Devam edilsin mi?",go,"Tekrar kaydet");return}
+  go()}
+async function doSave(){if(saving)return;
+  saving=true;$("#bSave").disabled=true;
+  if(ocrOk&&!ocrOff&&pendingList().length){setStatus("Önce el yazıları okunuyor…","");await runOcr()}
+  setStatus("Drive'a kaydediliyor…","");
+  const m=meta(),F=FORMS[kind],stamp=new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"}).replace(":",".");
+  const clean=s=>s.replace(/\[\?\]/g,"").replace(/[\\/:*?"<>|]/g,"").trim().slice(0,40);
+  const title=`${m.date} ${stamp} - ${clean(m.pet)||"isimsiz"} - ${clean(m.owner)||"sahip belirtilmedi"}`;
+  const html=`<html><head><meta charset="utf-8"></head><body style="font-family:Arial"><h1 style="color:#17324a">${esc(F.name)}</h1><p>Ankara Üniversitesi Veteriner Fakültesi · Davranış Kliniği<br>Kayıt No: ${esc(recId())} · Kayıt: ${esc(new Date().toLocaleString("tr-TR"))}<br><i>El yazıları resim olarak eklenmiştir; "Okunan metin" satırları otomatik okumadır, resimle karşılaştırınız.</i></p>${docBody()}</body></html>`;
+  try{const p=(await BK.save(kind,title,html))||{};data.__savedAt=Date.now();store.set("dk-draft-"+kind,data);
+    setStatus("Belge kaydedildi, tabloya yazılıyor…","");let tabErr="";
+    try{await BK.writeSheets(sheetData(p.url))}catch(x){tabErr=(x&&(x.message||x.code))||"hata"}
+    if(tabErr)setStatus("Belge kaydedildi: "+title+" · tabloya yazılamadı ("+tabErr+")","err");else setStatus("Drive'a ve tabloya kaydedildi: "+title,"ok");loadRecent();
+    if(p.url&&/^https:\/\//.test(p.url)){const s=$("#status");s.append(" · ");const a=document.createElement("a");a.href=p.url;a.target="_blank";a.rel="noopener";a.textContent="Belgeyi aç";s.append(a)}
+  }catch(e){setStatus("Kaydedilemedi: "+(e&&(e.message||e.code)||"bilinmeyen hata")+" · taslak tablette duruyor, tekrar deneyebilirsiniz","err")}
+  saving=false;$("#bSave").disabled=false}
+
+async function loadRecent(){const ul=$("#recent");if(!driveOk)return;
+  try{const files=(await BK.recent(kind))||[];ul.innerHTML="";
+    if(!files.length){const li=document.createElement("li");li.className="note";li.textContent="Henüz kayıt yok.";ul.append(li);return}
+    files.forEach(f=>{const li=document.createElement("li");if(f.url&&/^https:\/\//.test(f.url)){const a=document.createElement("a");a.href=f.url;a.target="_blank";a.rel="noopener";a.textContent=f.title||"belge";li.append(a)}else li.textContent=f.title||"belge";ul.append(li)})
+  }catch(e){ul.innerHTML="";const li=document.createElement("li");li.className="note";li.textContent="Liste alınamadı ("+(e.message||e.code||"hata")+")";ul.append(li)}}
+
+function newPatient(){if(SES.on){setStatus("Önce görüşme dinlemesini bitirin","err");return}const unsaved=!data.__savedAt&&Object.keys(data).some(k=>k.startsWith("ink_")||(/^f\d+$/.test(k)&&data[k]&&(data[k].length||Object.keys(data[k]).length)&&byId(k)?.type!=="d"));
+  ask(unsaved?"Bu form Drive'a kaydedilmedi. Yine de silip yeni hasta için temiz form açılsın mı?":"Yeni hasta için temiz form açılsın mı?",()=>{clearTimeout(tO);store.del("dk-draft-"+kind);render();setStatus("Temiz form hazır","");scrollTo(0,0)},unsaved?"Sil ve yeni aç":"Evet")}
+
+$("#bKopek").addEventListener("click",()=>{kind="kopek";store.set("dk-kind",kind);render()});
+$("#bKedi").addEventListener("click",()=>{kind="kedi";store.set("dk-kind",kind);render()});
+$("#bSave").addEventListener("click",save);
+$("#bNew").addEventListener("click",newPatient);
+setFinger(fingerOn);render();
+if(BK.settings){$("#bSet").hidden=false;$("#bSet").addEventListener("click",()=>BK.settings())}
+BK.init().catch(e=>{setStatus("Bağlantı kurulamadı: "+BK.errKind(e),"err")}).then(()=>{driveOk=!!BK.drive;ocrOk=!!BK.ocrOn;sesUI();if(BK.settings)$("#bSet").hidden=false;updPending();document.querySelectorAll("[data-ocr]").forEach(el=>showOcr(el.dataset.ocr));
+  if(driveOk)loadRecent();else{const ul=$("#recent");ul.innerHTML="";const li=document.createElement("li");li.className="note";li.textContent=BK.noDrive;ul.append(li)}
+  if(ocrOk&&pendingList().length)scheduleOcr()});
+}
+
+</script>
+</body>
+</html>
