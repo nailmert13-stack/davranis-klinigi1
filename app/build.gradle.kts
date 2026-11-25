@@ -15,7 +15,20 @@ android {
         versionName = "1.0"
     }
 
+    // Sabit imza anahtarı: yeni sürümler eski uygulamanın üzerine kurulabilsin
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
         }

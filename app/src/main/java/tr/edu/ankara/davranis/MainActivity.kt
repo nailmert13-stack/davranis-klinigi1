@@ -37,11 +37,15 @@ import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.vision.digitalink.common.*
 import com.google.mlkit.vision.digitalink.recognition.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 
 /**
  * Davranış Kliniği formunu tablette açan uygulama.
@@ -174,6 +178,7 @@ class MainActivity : AppCompatActivity() {
                 .put("key", prefs.getString("key", "") ?: ""))
             "settings" -> { showSettings(); answer(id, true, JSONObject.NULL) }
             "ink" -> recognizeInk(id, msg.optJSONArray("args") ?: JSONArray())
+            "api" -> callApi(id, msg.optString("args"))
             "speechStart" -> {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                     == PackageManager.PERMISSION_GRANTED) startListening(id)
@@ -227,6 +232,54 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton("Vazgeç", null)
             .show()
+    }
+
+    // ---------- Apps Script bağlantısı (WebView yerine uygulama yapar, tarayıcı kısıtlarına takılmaz) ----------
+
+    private fun callApi(id: Int, body: String) {
+        val url = prefs.getString("url", "") ?: ""
+        lifecycleScope.launch {
+            try {
+                val text = withContext(Dispatchers.IO) { post(url, body) }
+                answer(id, true, text)
+            } catch (e: Exception) {
+                answer(id, false, error = e.message ?: e.javaClass.simpleName)
+            }
+        }
+    }
+
+    private fun post(address: String, body: String): String {
+        if (!address.startsWith("https://")) throw Exception("Adres https:// ile başlamalı")
+        var conn = (URL(address).openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            doOutput = true
+            connectTimeout = 20000
+            readTimeout = 180000
+            instanceFollowRedirects = false
+            setRequestProperty("Content-Type", "text/plain;charset=utf-8")
+        }
+        conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+        var code = conn.responseCode
+        var hops = 0
+        // Apps Script cevabı başka bir adrese yönlendirerek verir; yönlendirmeyi GET ile izle
+        while (code in 300..399 && hops < 5) {
+            val loc = conn.getHeaderField("Location") ?: break
+            val next = URL(conn.url, loc)
+            conn.disconnect()
+            conn = (next.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 20000
+                readTimeout = 180000
+                instanceFollowRedirects = false
+            }
+            code = conn.responseCode
+            hops++
+        }
+        val stream = if (code in 200..299) conn.inputStream else (conn.errorStream ?: conn.inputStream)
+        val text = stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+        conn.disconnect()
+        if (code !in 200..299) throw Exception("HTTP $code: " + text.replace(Regex("<[^>]+>"), " ").trim().take(150))
+        return text
     }
 
     // ---------- El yazısı (ML Kit) ----------
