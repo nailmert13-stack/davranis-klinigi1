@@ -75,7 +75,8 @@ class MainActivity : AppCompatActivity() {
     private var photoUri: Uri? = null
 
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        fileCallback?.onReceiveValue(if (ok && photoUri != null) arrayOf(photoUri!!) else null)
+        val uri = photoUri
+        fileCallback?.onReceiveValue(if (ok && uri != null) arrayOf(uri) else null)
         fileCallback = null
     }
     private val pickContent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
@@ -126,8 +127,9 @@ class MainActivity : AppCompatActivity() {
                 return try {
                     if (params.isCaptureEnabled) {
                         val f = File(cacheDir, "etiket_${System.currentTimeMillis()}.jpg")
-                        photoUri = FileProvider.getUriForFile(this@MainActivity, "$packageName.files", f)
-                        takePicture.launch(photoUri)
+                        val uri = FileProvider.getUriForFile(this@MainActivity, "$packageName.files", f)
+                        photoUri = uri
+                        takePicture.launch(uri)
                     } else {
                         pickContent.launch(params.createIntent())
                     }
