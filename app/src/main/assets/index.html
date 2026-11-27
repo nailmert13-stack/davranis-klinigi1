@@ -108,6 +108,14 @@ td.ses{background:#fff3c4}
 .sesbar .rec{display:inline-block;width:12px;height:12px;border-radius:50%;background:#d62828;margin-right:6px;vertical-align:-1px}
 .sestext{color:var(--ink);font-size:15px;margin-top:4px;max-height:3.2em;overflow:hidden}
 #bSes[aria-pressed=true]{background:#d62828;color:#fff;border-color:#d62828}
+.panel{margin:18px 0;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.panel .ph{font-weight:700;font-size:18px;margin-bottom:6px}
+.panel .ph small{font-weight:400;font-size:13px;color:var(--soft);margin-left:6px}
+.panel h3{margin:12px 0 4px;font-size:16px}
+.panel ul{margin:0;padding-left:20px}
+#notesPanel{border-left:4px solid #e0a400}
+.filebtn{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:10px;background:var(--acc);color:#fff;font-weight:700;cursor:pointer}
+#fileList a{color:var(--acc);font-weight:700}
 #list{margin-top:50px;padding:16px;background:var(--panel);border-radius:14px}
 #list a{color:var(--acc);font-weight:700}
 #list li{margin:6px 0}
@@ -140,6 +148,7 @@ td.ses{background:#fff3c4}
     <button id="bFinger" aria-pressed="false">Parmakla yazma kapalı</button>
     <button id="bOcr" hidden>Yazıları metne çevir</button>
     <button id="bSes" hidden aria-pressed="false">Görüşmeyi dinle</button>
+    <button id="bFill" hidden>Dökümden formu doldur</button>
     <button id="bSet" hidden>Ayarlar</button>
     <span id="ocrNote"></span>
   </div>
@@ -149,6 +158,9 @@ td.ses{background:#fff3c4}
 <main>
   <h1 id="title"></h1>
   <p class="sub">Ankara Üniversitesi Veteriner Fakültesi · Davranış Kliniği</p>
+  <section id="notesPanel" class="panel" hidden><div class="ph">Görüşmeden önemli notlar <small>otomatik, kontrol edin</small></div><p id="notesOzet"></p><div id="notesList"></div><button type="button" id="bNotesDel" class="unses">Notları sil</button></section>
+  <section id="filesPanel" class="panel" hidden><div class="ph">Önceki terapiler ve dış dosyalar</div><p class="note">Önceki terapi raporları, reçeteler, başka kliniklerden gelen PDF, fotoğraf ya da Word dosyalarını bu hastanın kaydına ekleyin. Dosyalar Drive'da Ekler klasörüne bu kaydın numarasıyla yüklenir.</p>
+    <label class="filebtn"><input type="file" id="fileIn" multiple hidden>Dosya ekle</label> <span id="fileNone" class="note">Henüz dosya eklenmedi.</span><ul id="fileList"></ul></section>
   <form id="form" autocomplete="off"></form>
   <section id="list"><strong>Bu klasördeki son kayıtlar</strong><ul id="recent"><li class="note">Drive bağlantısı bekleniyor…</li></ul></section>
 </main>
@@ -180,6 +192,8 @@ td.ses{background:#fff3c4}
     writeSheets:list=>api("tabloyaYaz",list),
     recognizeInk:items=>nat("ink",items),
     sesleDoldur:(d,q,son)=>api("sesleDoldur",d,q,!!son),
+    sesNotlari:(d,tur)=>api("sesNotlari",d,tur),
+    uploadFile:(kind,rid,name,mime,b64)=>api("dosyaYukle",kind,rid,name,mime,b64),
     speech:{start:()=>nat("speechStart"),stop:()=>nat("speechStop")},
     errKind(e){return(e&&e.message||"hata").slice(0,140)}};
 })();
@@ -421,7 +435,7 @@ function render(){document.body.classList.toggle("kedi",kind==="kedi");$("#bKope
   pads={};undoStack=[];document.querySelectorAll("canvas[data-pad]").forEach(setupPad);
   document.querySelectorAll(".ink").forEach(w=>{const d=data["ink_"+w.dataset.ink];if(d){if(d.h)w.style.height=d.h+"px";if(d.s.length)fitInk(w)}});
   document.querySelectorAll("[data-ocr]").forEach(el=>showOcr(el.dataset.ocr));
-  updPending();loadRecent()}
+  updPending();renderNotes();renderFiles();loadRecent()}
 
 const allFields=()=>items.flatMap(i=>i.type==="two"?i.kids:[i]);
 const byId=id=>allFields().find(i=>i.id===id);
@@ -596,6 +610,8 @@ function sheetData(docUrl){const KN=kind==="kopek"?"Köpek":"Kedi",ID=IDENT[kind
       for(let r=0;r<it.b;r++){const vals=it.a.map((c,ci)=>txt(it.id+":"+r+":"+ci));if(vals.some(x=>x)){const o={"Kayıt No":rid,"Satır":r+1};it.a.forEach((c,ci)=>{if(!skip(c))o[c]=vals[ci]});rows.push(o)}}
       if(rows.length)tables.push({tab,rows});main[H(it)+" (satır sayısı)"]=rows.length;break}}};
   items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));
+  main["Görüşme notları (otomatik)"]=notesText();main["Ek dosya sayısı"]=(data.__ekler||[]).length;
+  ident["Ek dosyalar klasörü"]=((data.__ekler||[])[0]||{}).klasor||"";
   return[{tab:KN,rows:[main]},{tab:"Kimlik",rows:[ident]},...tables]}
 
 /* kalem izlerini satırlara ayır (cihaz içi tanıma satır satır daha iyi okur) */
@@ -618,56 +634,101 @@ const SES={on:false,busy:false,last:0,lastLen:0,t0:0,timer:null,loop:null,partia
 const isEmptyInk=k=>{const d=data["ink_"+k];return!(d&&d.s&&d.s.length)&&!data["txt_"+k]};
 function sesQuestions(){const out=[];let sec="",parent="";
   const one=it=>{if(it.type==="h"){sec=it.label;parent="";return}if(/Onam/.test(sec))return;if(["h3","n","p","s","photo"].includes(it.type))return;if(!it.sub)parent=it.label;
-    const s=(sec?sec+" › ":"")+(it.sub&&parent!==it.label?parent+" → ":"")+it.label,v=data[it.id];
+    const s=(it.sub&&parent!==it.label?parent+" → ":"")+it.label,v=data[it.id],g=sec,P=o=>out.push(Object.assign(o,{g}));
     switch(it.type){
-    case"yn":if(!v)out.push({id:it.id,s,t:"yn"});break;
-    case"r":if(!v)out.push({id:it.id,s,t:"r",o:it.a});break;
-    case"c":if(!(v||[]).length)out.push({id:it.id,s,t:"c",o:it.a});break;
-    case"num":if(v===undefined||v==="")out.push({id:it.id,s,t:"num",u:it.a});break;
-    case"d":if(!v)out.push({id:it.id,s,t:"d"});break;
-    case"t":case"a":if(isEmptyInk(it.id))out.push({id:it.id,s,t:it.type});break;
-    case"tb":{let empty=true;for(let r=0;r<it.b;r++)for(let c=0;c<it.a.length;c++)if(!isEmptyInk(it.id+":"+r+":"+c))empty=false;if(empty)out.push({id:it.id,s,t:"tb",o:it.a,max:it.b});break}
-    case"g":it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=ri+"_"+ci;if(it.c==="ehb"){if(!(v||{})[k])out.push({id:it.id+":"+k,s:s+" — "+r+" / "+c,t:"ehb"})}else if(isEmptyInk(it.id+":"+k))out.push({id:it.id+":"+k,s:s+" — "+r+" / "+c,t:"t"})}));break}};
+    case"yn":if(!v)P({id:it.id,s,t:"yn"});break;
+    case"r":if(!v)P({id:it.id,s,t:"r",o:it.a});break;
+    case"c":if(!(v||[]).length)P({id:it.id,s,t:"c",o:it.a});break;
+    case"num":if(v===undefined||v==="")P({id:it.id,s,t:"num",u:it.a});break;
+    case"d":if(!v)P({id:it.id,s,t:"d"});break;
+    case"t":case"a":if(isEmptyInk(it.id))P({id:it.id,s,t:it.type});break;
+    case"tb":{let empty=true;for(let r=0;r<it.b;r++)for(let c=0;c<it.a.length;c++)if(!isEmptyInk(it.id+":"+r+":"+c))empty=false;if(empty)P({id:it.id,s,t:"tb",o:it.a,max:it.b});break}
+    case"g":it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=ri+"_"+ci;if(it.c==="ehb"){if(!(v||{})[k])P({id:it.id+":"+k,s:s+" — "+r+" / "+c,t:"ehb"})}else if(isEmptyInk(it.id+":"+k))P({id:it.id+":"+k,s:s+" — "+r+" / "+c,t:"t"})}));break}};
   items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));return out}
+/* cevapları esnek eşleştir: büyük/küçük harf, ek ve kısaltma farklarını tolere et */
+const nrm=x=>String(x==null?"":x).toLocaleLowerCase("tr").replace(/[.,;:!?"'()]/g," ").replace(/\s+/g," ").trim();
+function matchOpt(val,opts){const v=nrm(val);if(!v)return null;let m=opts.find(o=>nrm(o)===v);if(m)return m;
+  m=opts.find(o=>{const o2=nrm(o);return v.startsWith(o2)||o2.startsWith(v)});if(m)return m;
+  m=opts.find(o=>{const w=nrm(o).split(" ")[0];return w.length>2&&v.includes(w)});return m||null}
+function yesNo(val){const v=nrm(val);if(/^(evet|e|var|olur|yes|true|1)\b/.test(v))return"Evet";if(/^(hayır|hayir|h|yok|değil|degil|no|false|0)\b/.test(v))return"Hayır";return null}
+function toNum(val){if(typeof val==="number")return val;const m=String(val||"").replace(",",".").match(/-?\d+(\.\d+)?/);if(!m)return null;let x=Number(m[0]);if(/ay\b/.test(nrm(val))&&!/yıl|yas|yaş/.test(nrm(val)))x=x/12;return isFinite(x)?x:null}
+function toEHB(val){const v=nrm(val);if(/^(e|evet|var)\b/.test(v))return"E";if(/^(h|hayır|hayir|yok)\b/.test(v))return"H";if(/^(b|bilmiyor|bilinmiyor|emin değil)/.test(v))return"B";return null}
+function toDate(val){const v=String(val||"").trim();let m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return v;m=v.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);if(m)return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");return null}
 function applySes(list){const touchedF=new Set();let n=0;
   (list||[]).forEach(c=>{if(!c||typeof c.id!=="string")return;const [id,k]=c.id.split(":"),it=byId(id);if(!it)return;const q=String(c.alinti||"").slice(0,140),val=c.deger;
+    if(val===null||val===undefined||val==="")if(it.type!=="tb")return;
     const mark=key=>{data["src_"+key]={q};touchedF.add(id);n++};
     if(it.type==="g"&&k!==undefined){const [ri,ci]=k.split("_");if(it.a[+ri]===undefined||it.b[+ci]===undefined)return;
-      if(it.c==="ehb"){const g=data[id]||{};if(!g[k]&&["E","H","B"].includes(val)){g[k]=val;data[id]=g;mark(id+":"+k)}}
+      if(it.c==="ehb"){const g=data[id]||{},x=toEHB(val);if(!g[k]&&x){g[k]=x;data[id]=g;mark(id+":"+k)}}
       else if(isEmptyInk(id+":"+k)&&val){data["txt_"+id+":"+k]=String(val);mark(id+":"+k)}return}
     switch(it.type){
-    case"yn":if(!data[id]&&YN.includes(val)){data[id]=val;mark(id)}break;
-    case"r":if(!data[id]&&it.a.includes(val)){data[id]=val;mark(id)}break;
-    case"c":{const a=(Array.isArray(val)?val:[val]).filter(x=>it.a.includes(x));if(!(data[id]||[]).length&&a.length){data[id]=a;mark(id)}break}
-    case"num":{const x=Number(String(val).replace(",","."));if((data[id]===undefined||data[id]==="")&&isFinite(x)&&String(val).trim()!==""){data[id]=String(Math.round(x*100)/100);mark(id)}break}
-    case"d":if(!data[id]&&/^\d{4}-\d{2}-\d{2}$/.test(String(val))){data[id]=val;mark(id)}break;
-    case"t":case"a":if(isEmptyInk(id)&&val){data["txt_"+id]=String(val);mark(id)}break;
+    case"yn":{const x=yesNo(val);if(!data[id]&&x){data[id]=x;mark(id)}break}
+    case"r":{const x=matchOpt(val,it.a);if(!data[id]&&x){data[id]=x;mark(id)}break}
+    case"c":{const a=[...new Set((Array.isArray(val)?val:String(val).split(/[;,]/)).map(x=>matchOpt(x,it.a)).filter(Boolean))];if(!(data[id]||[]).length&&a.length){data[id]=a;mark(id)}break}
+    case"num":{const x=toNum(val);if((data[id]===undefined||data[id]==="")&&x!==null){data[id]=String(Math.round(x*100)/100);mark(id)}break}
+    case"d":{const x=toDate(val);if(!data[id]&&x){data[id]=x;mark(id)}break}
+    case"t":case"a":if(isEmptyInk(id)&&String(val).trim()){data["txt_"+id]=String(val).trim();mark(id)}break;
     case"tb":{const rows=Array.isArray(c.satirlar)?c.satirlar:Array.isArray(val)?val:[];rows.slice(0,it.b).forEach((row,r)=>(Array.isArray(row)?row:[row]).slice(0,it.a.length).forEach((x,ci)=>{const key=id+":"+r+":"+ci;if(x&&isEmptyInk(key)){data["txt_"+key]=String(x);data["src_"+key]={q};touchedF.add(id);n++}}));break}}});
   if(n){persist();touchedF.forEach(rerenderField)}return n}
 function sesUI(){const b=$("#bSes");if(!b)return;b.hidden=!(BK.speech&&BK.sesOn);b.setAttribute("aria-pressed",SES.on);
   b.textContent=SES.on?"Kaydı bitir":"Görüşmeyi dinle";$("#sesBar").hidden=!SES.on&&!SES.final;
+  const f=$("#bFill");if(f){f.hidden=!(BK.sesOn&&data.__dokum&&!SES.on);f.disabled=SES.busy}
   if(SES.on){const s=Math.floor((Date.now()-SES.t0)/1000);$("#sesTime").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
   const d=data.__dokum||"";$("#sesText").textContent=(d.length>320?"…"+d.slice(-320):d)+(SES.partial?" "+SES.partial:"")}
-async function sesRun(final){if(SES.busy||!BK.sesleDoldur)return;const d=data.__dokum||"";if(!d.trim())return;
-  const qs=sesQuestions();if(!qs.length)return;SES.busy=true;$("#sesState").textContent=final?"Tüm görüşme taranıyor…":"Cevaplar çıkarılıyor…";
-  try{const win=final?d.slice(-60000):d.slice(Math.max(0,SES.lastLen-600)).slice(-4000);SES.lastLen=d.length;
-    const r=await BK.sesleDoldur(win,qs,!!final);const n=applySes(r&&r.cevaplar);
-    SES.filled=(SES.filled||0)+n;$("#sesState").textContent=`${SES.filled} alan sesten dolduruldu`}
-  catch(e){$("#sesState").textContent="Cevap çıkarılamadı: "+BK.errKind(e)}
-  SES.busy=false}
+/* kayıt bitince: bütün dökümden formu bölüm bölüm doldur, sonra önemli notları çıkar */
+async function sesFill(){if(SES.busy||!BK.sesleDoldur||!BK.sesOn)return;const d=(data.__dokum||"").trim();if(!d)return;
+  SES.busy=true;SES.final=true;sesUI();const st=$("#sesState");let total=0,errs=0;
+  const qs=sesQuestions(),groups=[];qs.forEach(q=>{let g=groups[groups.length-1];if(!g||g.name!==q.g||g.list.length>=35){g={name:q.g,list:[]};groups.push(g)}g.list.push(q)});
+  const dok=d.slice(-150000);
+  for(let i=0;i<groups.length;i++){st.textContent=`Form dolduruluyor (${i+1}/${groups.length}): ${groups[i].name}`;
+    try{const r=await BK.sesleDoldur(dok,groups[i].list.map(({g,...x})=>x),true);total+=applySes(r&&r.cevaplar)}
+    catch(e){errs++;st.textContent="Bir bölüm doldurulamadı: "+BK.errKind(e)}}
+  if(BK.sesNotlari){st.textContent="Önemli notlar çıkarılıyor…";
+    try{const r=await BK.sesNotlari(dok,kind);data.__notlar=r||null;persist();renderNotes()}catch(e){errs++}}
+  st.textContent=`${total} alan sesten dolduruldu`+(errs?` · ${errs} adım başarısız oldu, "Dökümden formu doldur" ile tekrar deneyebilirsiniz`:"")+" · sarı işaretli alanları kontrol edin";
+  SES.busy=false;sesUI()}
 function sesStart(){if(!BK.speech)return;
   ask("Hasta sahibinden görüşmenin dinlenip yazıya dökülmesi için onay alındı mı? Ses kaydedilmez, yalnızca yazıya dökülen metin forma eklenir.",async()=>{
     data.__sesOnay=new Date().toLocaleString("tr-TR");persist();
     try{await BK.speech.start()}catch(e){$("#sesState").textContent="Mikrofon açılamadı: "+BK.errKind(e);return}
-    SES.on=true;SES.final=false;SES.t0=Date.now();SES.lastLen=(data.__dokum||"").length;$("#sesState").textContent="Dinleniyor";
-    SES.timer=setInterval(sesUI,1000);SES.loop=setInterval(()=>{const d=data.__dokum||"";if(d.length-SES.lastLen>60)sesRun(false)},30000);sesUI()},"Onay alındı, başlat")}
-async function sesStop(){if(!SES.on)return;SES.on=false;clearInterval(SES.timer);clearInterval(SES.loop);try{await BK.speech.stop()}catch(e){}
-  SES.final=true;sesUI();await sesRun(true);persist()}
+    SES.on=true;SES.final=false;SES.t0=Date.now();$("#sesState").textContent="Dinleniyor · görüşme bitince \"Kaydı bitir\"e basın";
+    SES.timer=setInterval(sesUI,1000);sesUI()},"Onay alındı, başlat")}
+async function sesStop(){if(!SES.on)return;SES.on=false;clearInterval(SES.timer);try{await BK.speech.stop()}catch(e){}
+  await new Promise(r=>setTimeout(r,800));
+  if(SES.partial){data.__dokum=((data.__dokum||"")+" "+SES.partial).trim();SES.partial=""}persist();
+  SES.final=true;sesUI();await sesFill();persist()}
 if(BK.on){BK.on("final",m=>{if(!m.text)return;data.__dokum=((data.__dokum||"")+" "+m.text).trim();SES.partial="";persist();sesUI()});
   BK.on("partial",m=>{SES.partial=m.text||"";sesUI()});
   BK.on("state",m=>{if(m.state==="idle"&&SES.on&&m.reason&&m.reason!=="stopped"){$("#sesState").textContent="Dinleme durdu: "+m.reason}});
   BK.on("status",m=>{if(m.text)setStatus(m.text,"")})}
 $("#bSes").addEventListener("click",()=>SES.on?sesStop():sesStart());
+$("#bFill").addEventListener("click",()=>{SES.final=true;sesFill()});
+
+/* görüşme notları paneli */
+function renderNotes(){const P=$("#notesPanel"),n=data.__notlar;if(!n||(!n.ozet&&!(n.notlar||[]).length)){P.hidden=true;return}P.hidden=false;
+  $("#notesOzet").textContent=n.ozet||"";const L=$("#notesList");L.innerHTML="";let last=null,ul=null;
+  (n.notlar||[]).forEach(x=>{const b=String(x.baslik||"Diğer");if(b!==last){const h=document.createElement("h3");h.textContent=b;L.append(h);ul=document.createElement("ul");L.append(ul);last=b}
+    const li=document.createElement("li");li.textContent=String(x.madde||"");ul.append(li)})}
+$("#bNotesDel").addEventListener("click",()=>ask("Otomatik görüşme notları silinsin mi?",()=>{delete data.__notlar;persist();renderNotes()}));
+function notesText(){const n=data.__notlar;if(!n)return"";return[(n.ozet||""),...(n.notlar||[]).map(x=>`${x.baslik||""}: ${x.madde||""}`)].filter(Boolean).join("\n")}
+
+/* önceki terapiler ve dış dosyalar */
+function renderFiles(){const P=$("#filesPanel");P.hidden=!(BK.uploadFile&&driveOk);const L=$("#fileList");L.innerHTML="";
+  (data.__ekler||[]).forEach((f,i)=>{const li=document.createElement("li");if(/^https:\/\//.test(f.url||"")){const a=document.createElement("a");a.href=f.url;a.target="_blank";a.rel="noopener";a.textContent=f.ad||"dosya";li.append(a)}else li.textContent=f.ad||"dosya";
+    const x=document.createElement("button");x.type="button";x.className="unses";x.textContent="Listeden çıkar";x.dataset.fdel=i;li.append(" ",x);L.append(li)});
+  $("#fileNone").hidden=(data.__ekler||[]).length>0}
+$("#fileList").addEventListener("click",e=>{const b=e.target.closest("[data-fdel]");if(!b)return;const i=+b.dataset.fdel;
+  ask("Dosya bu kaydın listesinden çıkarılsın mı? Drive'daki kopyası silinmez.",()=>{(data.__ekler||[]).splice(i,1);persist();renderFiles()})});
+$("#fileIn").addEventListener("change",async e=>{const files=[...(e.target.files||[])];e.target.value="";if(!files.length)return;
+  if(!driveOk){setStatus("Dosya eklemek için Drive bağlantısı gerekiyor","err");return}
+  const rid=recId();persist();let ok=0;
+  for(const f of files){if(f.size>40*1024*1024){setStatus(f.name+" 40 MB'tan büyük, eklenmedi","err");continue}
+    setStatus("Yükleniyor: "+f.name,"");
+    try{const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]||"");r.onerror=rej;r.readAsDataURL(f)});
+      const r=await BK.uploadFile(kind,rid,f.name,f.type||"application/octet-stream",b64);
+      (data.__ekler=data.__ekler||[]).push({ad:(r&&r.ad)||f.name,url:r&&r.url,klasor:r&&r.klasor});persist();renderFiles();ok++}
+    catch(x){setStatus(f.name+" yüklenemedi: "+BK.errKind(x),"err")}}
+  if(ok)setTimeout(()=>setStatus(ok+" dosya Drive'a yüklendi ve bu kayda eklendi","ok"),400)});
 
 /* onay penceresi */
 let dlgCb=null;function ask(t,cb,yes){$("#dlgText").textContent=t;$("#dlgYes").textContent=yes||"Evet";dlgCb=cb;$("#dlg").classList.add("on");$("#dlgYes").focus()}
@@ -676,6 +737,9 @@ $("#dlgNo").addEventListener("click",()=>$("#dlg").classList.remove("on"));
 
 /* Drive belgesi */
 function docBody(){const out=[],dash='<span style="color:#999">—</span>';
+  const N=data.__notlar;if(N&&(N.ozet||(N.notlar||[]).length)){out.push(`<h2 style="color:#17324a">Görüşmeden önemli notlar (otomatik)</h2>${N.ozet?`<p><i>${esc(N.ozet)}</i></p>`:""}`);
+    let last=null;(N.notlar||[]).forEach(x=>{if(x.baslik!==last){out.push(`<p><b>${esc(x.baslik||"")}</b></p>`);last=x.baslik}out.push(`<p style="margin-left:18px">• ${esc(x.madde||"")}</p>`)})}
+  const E=data.__ekler||[];if(E.length){out.push(`<h2 style="color:#17324a">Önceki terapiler ve dış dosyalar</h2>`+E.map(f=>`<p>• ${/^https:\/\//.test(f.url||"")?`<a href="${esc(f.url)}">${esc(f.ad||"dosya")}</a>`:esc(f.ad||"dosya")}</p>`).join(""))}
   const txtLine=k=>{const t=data["txt_"+k];return t?`<br><span style="color:#444">Okunan metin: ${esc(t).replace(/\n/g,"<br>")}</span>`:""};
   const one=it=>{const v=data[it.id],pad=it.sub?"margin-left:24px;":"";
     switch(it.type){
@@ -740,7 +804,7 @@ $("#bSave").addEventListener("click",save);
 $("#bNew").addEventListener("click",newPatient);
 setFinger(fingerOn);render();
 if(BK.settings){$("#bSet").hidden=false;$("#bSet").addEventListener("click",()=>BK.settings())}
-BK.init().catch(e=>{setStatus("Bağlantı kurulamadı: "+BK.errKind(e),"err")}).then(()=>{driveOk=!!BK.drive;ocrOk=!!BK.ocrOn;sesUI();if(BK.settings)$("#bSet").hidden=false;updPending();document.querySelectorAll("[data-ocr]").forEach(el=>showOcr(el.dataset.ocr));
+BK.init().catch(e=>{setStatus("Bağlantı kurulamadı: "+BK.errKind(e),"err")}).then(()=>{driveOk=!!BK.drive;ocrOk=!!BK.ocrOn;sesUI();renderFiles();if(BK.settings)$("#bSet").hidden=false;updPending();document.querySelectorAll("[data-ocr]").forEach(el=>showOcr(el.dataset.ocr));
   if(driveOk)loadRecent();else{const ul=$("#recent");ul.innerHTML="";const li=document.createElement("li");li.className="note";li.textContent=BK.noDrive;ul.append(li)}
   if(ocrOk&&pendingList().length)scheduleOcr()});
 }
