@@ -2,6 +2,7 @@ package tr.edu.ankara.davranis
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -9,6 +10,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.speech.RecognitionListener
+import android.speech.RecognitionService
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.text.InputType
@@ -361,13 +363,28 @@ class MainActivity : AppCompatActivity() {
             return
         }
         if (speech == null) {
-            speech = SpeechRecognizer.createSpeechRecognizer(this).apply { setRecognitionListener(listener) }
+            val google = googleRecognizer()
+            speech = (if (google != null) SpeechRecognizer.createSpeechRecognizer(this, google)
+                      else SpeechRecognizer.createSpeechRecognizer(this)).apply { setRecognitionListener(listener) }
+            event("status", JSONObject().put("text",
+                if (google != null) "Ses tanıma: Google" else "Ses tanıma: tabletin varsayılan servisi (Google servisi bulunamadı)"))
         }
         listening = true
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         speech?.startListening(speechIntent)
         event("state", JSONObject().put("state", "listening"))
         answer(id, true, JSONObject.NULL)
+    }
+
+    /** Tablette yüklü Google ses tanıma servisini bulur (Google uygulaması ya da Google Konuşma Hizmetleri). */
+    private fun googleRecognizer(): ComponentName? {
+        val services = packageManager.queryIntentServices(Intent(RecognitionService.SERVICE_INTERFACE), 0)
+            .mapNotNull { it.serviceInfo }
+        val order = listOf("com.google.android.googlequicksearchbox", "com.google.android.tts")
+        for (pkg in order) {
+            services.firstOrNull { it.packageName == pkg }?.let { return ComponentName(it.packageName, it.name) }
+        }
+        return services.firstOrNull { it.packageName.startsWith("com.google.") }?.let { ComponentName(it.packageName, it.name) }
     }
 
     private fun stopListening() {
