@@ -1,8 +1,13 @@
+# GitHub'a yüklendiğinde APK'yı otomatik derler ve sabit bir bağlantıya yayınlar:
+# https://github.com/nailmert13-stack/davranis-klinigi1/releases/download/son-surum/DavranisKlinigi.apk
 name: APK derle
 
 on:
   push:
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   derle:
@@ -26,3 +31,15 @@ jobs:
         with:
           name: DavranisKlinigi-APK
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Son sürümü yayınla
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk DavranisKlinigi.apk
+          gh release delete son-surum -y --cleanup-tag || true
+          gh release create son-surum DavranisKlinigi.apk \
+            --title "Davranış Kliniği - son sürüm" \
+            --notes "Otomatik derleme: $(git log -1 --pretty=%s)" \
+            --latest
