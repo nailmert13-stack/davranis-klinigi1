@@ -107,6 +107,7 @@ td.ses{background:#fff3c4}
 .sesbar{padding:6px max(3vw,12px) 10px;font-size:14px;color:var(--soft)}
 .sesbar .rec{display:inline-block;width:12px;height:12px;border-radius:50%;background:#d62828;margin-right:6px;vertical-align:-1px}
 .sestext{color:var(--ink);font-size:15px;margin-top:4px;max-height:3.2em;overflow:hidden}
+.sesbar .rec[hidden]{display:none}
 #bSes[aria-pressed=true]{background:#d62828;color:#fff;border-color:#d62828}
 .panel{margin:18px 0;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
 .panel .ph{font-weight:700;font-size:18px;margin-bottom:6px}
@@ -118,6 +119,27 @@ td.ses{background:#fff3c4}
 #fileList a{color:var(--acc);font-weight:700}
 .useses{min-height:32px;padding:2px 12px;font-size:13px;margin-left:6px;background:#1f6f50;color:#fff;border-color:#1f6f50;font-weight:700}
 #bSesAll{min-height:44px;font-size:15px}
+.oner:empty{display:none}
+.oner{margin-top:6px;padding:6px 10px;border-radius:10px;font-size:14px;color:#5a4500;background:#fff8dc;border:1px solid #efd77a}
+.oner.done{background:#f4f6f7;border-color:var(--line);color:var(--soft)}
+.oner .oh{margin-bottom:2px}.oner .oh b{color:#8a6a00}.oner.done .oh b{color:var(--soft)}
+.oner .or{padding:3px 0;line-height:1.5}.oner .or+.or{border-top:1px dashed #ead58a}
+.oner .or b{color:#17324a}.oner .oq{color:#8a7a50;font-style:italic}
+.oner .or.kaldirildi{text-decoration:line-through;text-decoration-color:#bbb}
+.oner .or.kaldirildi button{text-decoration:none}
+.ocr .sesv{color:#1f6f50;margin-top:2px}.ocr .sesv b{color:#1f6f50}
+.unit{display:flex;gap:6px;margin:2px 0 6px}.unit button{min-height:36px;padding:2px 16px;font-size:15px}
+.unit button[aria-pressed=true],.npu button[aria-pressed=true]{background:var(--acc);color:#fff;border-color:var(--acc)}
+.npu{margin-bottom:8px}.npu button{flex:1;min-height:44px;font-size:18px}
+#notesAyr p{margin:4px 0;line-height:1.5}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(46vw,520px);min-width:300px;z-index:20;background:var(--bg);border-left:1px solid var(--line);box-shadow:-6px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column}
+.drawer[hidden]{display:none}
+.drawer .dh{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}.drawer .dh b{font-size:18px}.drawer .dh button{margin-left:auto}
+.drawer .dn{margin:6px 14px}
+.dl{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 14px 40px;font-size:16px;line-height:1.55}
+.dl .dseg{padding:6px 0;border-bottom:1px solid #eef1f3}.dl .dseg time{display:block!important;margin-bottom:2px;font-size:12px;color:var(--soft)}
+.dl .dseg.hl{background:#fff3c4;border-radius:6px;padding:6px 8px}.dl .part{color:var(--soft);font-style:italic}
+.oner .oq{cursor:pointer;text-decoration:underline dotted}
 #libPanel summary{cursor:pointer;list-style:revert}
 #dsPanel{border-left:4px solid #1f6f50}
 #dsPanel.ses{border-left-color:#e0a400}
@@ -160,7 +182,7 @@ td.ses{background:#fff3c4}
     <button id="bSet" hidden>Ayarlar</button>
     <span id="ocrNote"></span>
   </div>
-  <div id="sesBar" class="sesbar" hidden><span class="rec" aria-hidden="true"></span><b id="sesTime">00:00</b> <span id="sesState"></span><div id="sesText" class="sestext"></div></div>
+  <div id="sesBar" class="sesbar" hidden><span class="rec" aria-hidden="true"></span><b id="sesTime">00:00</b> <span id="sesState"></span> <button type="button" id="bDokum" class="unses">Dökümün tamamını oku</button><div id="sesText" class="sestext"></div></div>
   <nav class="scroll" id="nav"></nav>
 </header>
 <main>
@@ -172,7 +194,7 @@ td.ses{background:#fff3c4}
     <button type="button" id="bLibProc">Bekleyenleri şimdi işle</button> <span id="libState" class="note"></span>
     <ul id="libList"></ul></details>
   <div id="holder" hidden>
-  <section id="notesPanel" class="panel" hidden><div class="ph">Görüşmeden önemli notlar <small>otomatik, kontrol edin</small></div><p id="notesOzet"></p><div id="notesList"></div><button type="button" id="bNotesDel" class="unses">Notları sil</button></section>
+  <section id="notesPanel" class="panel" hidden><div class="ph">Görüşmeden önemli notlar <small>otomatik, kontrol edin</small></div><p id="notesOzet"></p><div id="notesAyr"></div><div id="notesList"></div><button type="button" id="bNotesDel" class="unses">Notları sil</button></section>
   <section id="dsPanel" class="panel" hidden><div class="ph">Karar desteği: öneri ve ilaç dozu <small>kaynak kütüphanenize ve kayıtlı bilgilere dayanır</small></div>
     <p class="note">Öneriler yalnızca yüklediğiniz kaynaklardan, kaynak adıyla verilir; dozlar kiloya göre adım adım hesaplanır. Uygulamadan önce kaynağın kendisinden kontrol edin. Gönderilen vaka özetinde kimlik bilgisi yoktur.</p>
     <button type="button" id="bDs" class="filebtn">Öneri ve ilaç dozu iste</button> <span id="dsState" class="note"></span>
@@ -184,7 +206,9 @@ td.ses{background:#fff3c4}
   <form id="form" autocomplete="off"></form>
   <section id="list"><strong>Bu klasördeki son kayıtlar</strong><ul id="recent"><li class="note">Drive bağlantısı bekleniyor…</li></ul></section>
 </main>
-<div class="dlg" id="np"><div class="np" role="dialog" aria-modal="true" aria-labelledby="npLabel"><div class="npl" id="npLabel"></div><div class="npv" id="npVal"></div>
+<aside id="dokumDr" class="drawer" hidden aria-label="Görüşme dökümü"><div class="dh"><b>Görüşme dökümü</b> <span id="dokumInfo" class="note"></span><button type="button" id="bDokumX">Kapat</button></div>
+  <p class="note dn">Kaydırarak okuyabilirsiniz. Önerilerdeki alıntıya dokununca dökümde o yer işaretlenir.</p><div id="dokumList" class="dl"></div></aside>
+<div class="dlg" id="np"><div class="np" role="dialog" aria-modal="true" aria-labelledby="npLabel"><div class="npl" id="npLabel"></div><div class="npu chips" id="npUnit" hidden><button type="button" data-k="u:yıl">Yıl</button><button type="button" data-k="u:ay">Ay</button></div><div class="npv" id="npVal"></div>
   <div class="npk"><button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" data-k=",">,</button><button type="button" data-k="0">0</button><button type="button" data-k="del" aria-label="Sil">⌫</button></div>
   <div class="npa"><button type="button" data-k="clr">Temizle</button><button type="button" data-k="no">Vazgeç</button><button type="button" data-k="ok" class="primary">Tamam</button></div></div></div>
 <div class="dlg" id="dlg"><div><p id="dlgText"></p><div class="chips"><button id="dlgYes" class="primary">Evet</button><button id="dlgNo">Vazgeç</button></div></div></div>
@@ -430,17 +454,17 @@ function fieldHTML(it){const id=it.id,v=data[id],cls="f"+(it.sub?" in":"");
     <label class="shot"><input type="file" accept="image/*" capture="environment" data-photo="${id}" hidden>
       ${v?`<img src="${esc(v)}" alt="Hasta etiketi fotoğrafı">`:`<span class="cam" aria-hidden="true"><svg viewBox="0 0 48 48" width="46" height="46"><rect x="5" y="14" width="38" height="26" rx="5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M17 14l3-5h8l3 5" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="24" cy="27" r="7" fill="none" stroke="currentColor" stroke-width="3"/></svg></span><span><b>Etiketi çekmek için dokunun</b><br><small>Kamera açılır; etiketin tamamı kareye girsin</small></span>`}
     </label>${v?`<div class="chips"><button type="button" data-rephoto="${id}">Yeniden çek</button><button type="button" data-delphoto="${id}">Kaldır</button></div>`:""}</div></div>`;
-  case"d":return `<div class="${cls}"><label class="l" for="${id}">${esc(it.label)}</label><input type="date" id="${id}" data-id="${id}" value="${esc(v||"")}"></div>`;
-  case"t":case"a":return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span>${box(id,it.type)}</div>`;
-  case"num":return `<div class="${cls}${sesCls(id)}" data-fid="${id}"><span class="l">${esc(it.label)}</span><button type="button" class="numf" data-num="${id}">${numTxt(id)}</button>${sesNote(id)}</div>`;
+  case"d":return `<div class="${cls}" data-fid="${id}"><label class="l" for="${id}">${esc(it.label)}</label><input type="date" id="${id}" data-id="${id}" value="${esc(v||"")}">${onerBox(id)}</div>`;
+  case"t":case"a":return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span>${box(id,it.type)}${onerBox(id)}</div>`;
+  case"num":return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span>${it.a==="yıl"?`<div class="unit" role="group" aria-label="Birim">${["yıl","ay"].map(u=>`<button type="button" data-unit="${id}" data-u="${u}" aria-pressed="${unitOf(id)===u}">${u==="yıl"?"Yıl":"Ay"}</button>`).join("")}</div>`:""}<button type="button" class="numf" data-num="${id}">${numTxt(id)}</button>${onerBox(id)}</div>`;
   case"yn":case"r":case"c":{const opts=it.type==="yn"?YN:it.a,multi=it.type==="c",sel=multi?(v||[]):v;
-    return `<div class="${cls}${sesCls(id)}" data-fid="${id}"><span class="l">${esc(it.label)}</span><div class="chips" role="group">${opts.map(o=>`<button type="button" class="chip" data-pick="${id}" data-multi="${multi?1:0}" data-v="${esc(o)}" aria-pressed="${multi?sel.includes(o):sel===o}">${esc(o)}</button>`).join("")}</div>${sesNote(id)}</div>`}
+    return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span><div class="chips" role="group">${opts.map(o=>`<button type="button" class="chip" data-pick="${id}" data-multi="${multi?1:0}" data-v="${esc(o)}" aria-pressed="${multi?sel.includes(o):sel===o}">${esc(o)}</button>`).join("")}</div>${onerBox(id)}</div>`}
   case"tb":{const cols=it.a,rows=it.b;
-    return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span><div class="scroll"><table class="stack"><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${Array.from({length:rows},(_,r)=>`<tr>${cols.map((c,ci)=>`<td data-l="${esc(c)}">${box(id+":"+r+":"+ci,"c")}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>`}
+    return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span><div class="scroll"><table class="stack"><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${Array.from({length:rows},(_,r)=>`<tr>${cols.map((c,ci)=>`<td data-l="${esc(c)}">${box(id+":"+r+":"+ci,"c")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${onerBox(id)}</div>`}
   case"g":{const rows=it.a,cols=it.b,mode=it.c,val=v||{};
     return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span><div class="scroll"><table class="${mode==="text"?"stack":""}"><thead><tr><th></th>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r,ri)=>`<tr><th>${esc(r)}</th>${cols.map((c,ci)=>{const k=ri+"_"+ci,x=val[k]||"";
-      return mode==="ehb"?`<td class="c${isPend(id+":"+k)?" ses":""}"><button type="button" class="ehb" data-g="${id}" data-k="${k}" data-v="${esc(x)}" aria-label="${esc(r)} – ${esc(c)}">${esc(x)||"–"}</button></td>`
-      :`<td data-l="${esc(c)}">${box(id+":"+k,"c")}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>${gridSesNote(it)}</div>`}
+      return mode==="ehb"?`<td class="c"><button type="button" class="ehb" data-g="${id}" data-k="${k}" data-v="${esc(x)}" aria-label="${esc(r)} – ${esc(c)}">${esc(x)||"–"}</button></td>`
+      :`<td data-l="${esc(c)}">${box(id+":"+k,"c")}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>${onerBox(id)}</div>`}
   case"s":{const h=(v&&v.h)||(it.a==="sig"?300:it.a==="kroki"?900:it.a==="note"?420:620);
     return `<div class="${cls}"><span class="l">${esc(it.label)}</span>${it.b?`<ul class="hint">${it.b.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
     <div class="pad"><div class="tools" data-tools="${id}">
@@ -454,6 +478,7 @@ function fieldHTML(it){const id=it.id,v=data[id],cls="f"+(it.sub?" in":"");
 
 function render(){document.body.classList.toggle("kedi",kind==="kedi");$("#bKopek").setAttribute("aria-pressed",kind==="kopek");$("#bKedi").setAttribute("aria-pressed",kind==="kedi");
   const F=FORMS[kind];$("#title").textContent=F.name;items=flatten(F.schema);data=store.get("dk-draft-"+kind)||{};
+  migrateSrc();
   if(!data.__started){allFields().filter(i=>i.type==="d"&&/Tarih$/.test(i.label)).forEach(i=>data[i.id]=today());data.__started=1}
   const hold=$("#holder");["notesPanel","dsPanel"].forEach(i=>hold.append($("#"+i)));
   $("#form").innerHTML=items.map(fieldHTML).join("");
@@ -462,7 +487,8 @@ function render(){document.body.classList.toggle("kedi",kind==="kedi");$("#bKope
   pads={};undoStack=[];document.querySelectorAll("canvas[data-pad]").forEach(setupPad);
   document.querySelectorAll(".ink").forEach(w=>{const d=data["ink_"+w.dataset.ink];if(d){if(d.h)w.style.height=d.h+"px";if(d.s.length)fitInk(w)}});
   document.querySelectorAll("[data-ocr]").forEach(el=>showOcr(el.dataset.ocr));
-  updPending();renderNotes();renderFiles();renderDs();sesAllUI();loadRecent()}
+  [...new Set(onerKeys().map(k=>k.split(":")[0]))].forEach(renderOner);
+  updPending();renderNotes();renderFiles();renderDs();sesAllUI();sesUI();loadRecent()}
 
 const allFields=()=>items.flatMap(i=>i.type==="two"?i.kids:[i]);
 const byId=id=>allFields().find(i=>i.id===id);
@@ -483,6 +509,7 @@ $("#form").addEventListener("click",e=>{const b=e.target.closest("button");if(!b
     if(b.dataset.multi==="1"){const a=data[id]||[];data[id]=a.includes(v)?a.filter(x=>x!==v):[...a,v];b.setAttribute("aria-pressed",data[id].includes(v))}
     else{data[id]=data[id]===v?"":v;b.parentNode.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===data[id]))}
     persist()}
+  else if(b.dataset.unit){const id=b.dataset.unit;if(b.dataset.u==="ay")data["birim_"+id]="ay";else delete data["birim_"+id];refreshCtl(id);persist()}
   else if(b.dataset.rephoto){document.querySelector(`[data-photo="${b.dataset.rephoto}"]`).click()}
   else if(b.dataset.delphoto){const id=b.dataset.delphoto;ask("Etiket fotoğrafı kaldırılsın mı?",()=>{delete data[id];persist();rerenderPhoto(id)})}
   else if(b.classList.contains("ehb")){const seq=["","E","H","B"],n=seq[(seq.indexOf(b.dataset.v)+1)%4];b.dataset.v=n;b.textContent=n||"–";(data[b.dataset.g]=data[b.dataset.g]||{})[b.dataset.k]=n;persist()}
@@ -564,10 +591,9 @@ function pendingList(){const out=[];
   return out}
 function showOcr(key){const el=document.querySelector(`[data-ocr="${CSS.escape(key)}"]`);if(!el)return;
   const o=key.includes(":")||!pads[key]?data["ink_"+key]:data[key],t=data["txt_"+key]||"";el.textContent="";el.className="ocr";
-  if(o&&o.dirty&&o.s&&o.s.length&&ocrOk&&!ocrOff){el.classList.add("wait");el.textContent=t?t+"  (güncelleniyor…)":"okunacak…";return}
-  const src=data["src_"+key];
-  if(t){const b=document.createElement("b");b.textContent=src?"Sesten: ":"Okunan: ";el.append(b,t);
-    if(src&&!src.ok){el.classList.add("ses");const s=document.createElement("span");s.innerHTML=" "+sesBtns(key);el.append(s)}}}
+  if(o&&o.dirty&&o.s&&o.s.length&&ocrOk&&!ocrOff){el.classList.add("wait");el.textContent=t?t+"  (güncelleniyor…)":"okunacak…";const sv=data["sesv_"+key];if(sv){const d=document.createElement("div");d.className="sesv";d.textContent="Sesten (kullanıldı): "+sv;el.append(d)}return}
+  if(t){const b=document.createElement("b");b.textContent="Okunan: ";el.append(b,t)}
+  const sv=data["sesv_"+key];if(sv){const d=document.createElement("div");d.className="sesv";const b=document.createElement("b");b.textContent="Sesten (kullanıldı): ";d.append(b,sv);el.append(d)}}
 function updPending(){const n=pendingList().filter(p=>p.o.s&&p.o.s.length).length,b=$("#bOcr");
   b.hidden=!ocrOk;b.textContent=n?`Yazıları metne çevir (${n})`:"Yazılar okundu";b.disabled=!n||!!ocrBusy;
   $("#ocrNote").textContent=ocrOff}
@@ -581,7 +607,7 @@ function runOcr(){if(ocrBusy)return ocrBusy.then(()=>pendingList().length?runOcr
       if(BK.recognizeInk){let arr;
         try{arr=await BK.recognizeInk(batch.map(p=>({lines:inkLines(p.o.s)})))}
         catch(e){ocrOff="El yazısı tanınamadı ("+BK.errKind(e)+"). \"Yazıları metne çevir\"e basarak tekrar deneyebilirsiniz.";batch.forEach(p=>showOcr(p.key));return}
-        batch.forEach((p,j)=>{if(p.o.v===vers[j]){data["txt_"+p.key]=String((arr&&arr[j])||"").trim();delete data["src_"+p.key];p.o.dirty=false}showOcr(p.key)});persist();continue}
+        batch.forEach((p,j)=>{if(p.o.v===vers[j]){data["txt_"+p.key]=String((arr&&arr[j])||"").trim();p.o.dirty=false}showOcr(p.key)});persist();continue}
       const imgs=batch.map(p=>cropCanvas(p.o.s,p.pad?1:2.5));
       const prompt=`Görüntüler bir veteriner davranış kliniği değerlendirme formundaki kalemle yazılmış Türkçe el yazılarıdır. Her görüntüde yazılanı aynen metne çevir. Düzeltme, yorum veya ekleme yapma; kısaltmaları olduğu gibi bırak; Türkçe karakterleri (ç ğ ı İ ö ş ü) doğru kullan. Okunamayan kelimeye [?] yaz. Görüntüde yazı değil çizim varsa boş metin ver.\nGörüntülerin ait olduğu alanlar:\n${batch.map((p,j)=>`${j+1}. ${keyLabel(p.key)||"not alanı"}`).join("\n")}\nYalnızca şu biçimde bir JSON nesnesi döndür: {"1":"metin","2":"metin"}`;
       let res;
@@ -591,26 +617,28 @@ function runOcr(){if(ocrBusy)return ocrBusy.then(()=>pendingList().length?runOcr
         else if(c==="rate")ocrOff="Okuma şimdilik sınıra takıldı. Biraz sonra \"Yazıları metne çevir\"e basın.";
         else ocrOff="Okuma yapılamadı ("+c+"). \"Yazıları metne çevir\"e basarak tekrar deneyebilirsiniz.";
         batch.forEach(p=>showOcr(p.key));return}
-      batch.forEach((p,j)=>{const t=res&&res[String(j+1)];if(p.o.v===vers[j]){data["txt_"+p.key]=typeof t==="string"?t.trim():"";delete data["src_"+p.key];p.o.dirty=false}showOcr(p.key)});
+      batch.forEach((p,j)=>{const t=res&&res[String(j+1)];if(p.o.v===vers[j]){data["txt_"+p.key]=typeof t==="string"?t.trim():"";p.o.dirty=false}showOcr(p.key)});
       persist()}})().finally(()=>{ocrBusy=null;updPending()});
   updPending();return ocrBusy}
 $("#bOcr").addEventListener("click",()=>{ocrOff="";clearTimeout(tO);runOcr()});
 
 /* sayı tuş takımı */
 const fmtNum=v=>String(v).replace(".",",");
-function numTxt(id){const it=byId(id),v=data[id];return v!==undefined&&v!==""?`${esc(fmtNum(v))}<small>${esc(it&&it.a||"")}</small>`:'<span class="ph">Dokunun, sayı girin</span>'}
-let npId=null,npBuf="";
-function npShow(){$("#npVal").textContent=npBuf?fmtNum(npBuf):"";}
+function numTxt(id){const v=data[id];return v!==undefined&&v!==""?`${esc(fmtNum(v))}<small>${esc(unitOf(id))}</small>`:'<span class="ph">Dokunun, sayı girin</span>'}
+let npId=null,npBuf="",npU="";
+function npShow(){$("#npVal").textContent=npBuf?fmtNum(npBuf):"";const it=byId(npId);$("#npLabel").textContent=it.label+(it.a?` (${it.a==="yıl"?npU:it.a})`:"");
+  const u=$("#npUnit");u.hidden=!(it&&it.a==="yıl");u.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k==="u:"+npU))}
 $("#form").addEventListener("click",e=>{const b=e.target.closest("[data-num]");if(!b)return;npId=b.dataset.num;const it=byId(npId);
-  npBuf=data[npId]!==undefined?String(data[npId]):"";$("#npLabel").textContent=it.label+(it.a?` (${it.a})`:"");npShow();$("#np").classList.add("on")});
+  npBuf=data[npId]!==undefined?String(data[npId]):"";npU=unitOf(npId);npShow();$("#np").classList.add("on")});
 $("#np").addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b)return;const k=b.dataset.k;
   if(/^\d$/.test(k)){if(npBuf.replace(".","").length<6)npBuf=(npBuf==="0"?"":npBuf)+k}
   else if(k===","){if(!npBuf.includes("."))npBuf=(npBuf||"0")+"."}
   else if(k==="del")npBuf=npBuf.slice(0,-1);
   else if(k==="clr")npBuf="";
   else if(k==="no"){$("#np").classList.remove("on");return}
-  else if(k==="ok"){const v=npBuf.replace(/\.$/,"");if(v==="")delete data[npId];else data[npId]=v;persist();
-    const el=document.querySelector(`[data-num="${npId}"]`);if(el)el.innerHTML=numTxt(npId);$("#np").classList.remove("on");return}
+  else if(k.startsWith("u:"))npU=k.slice(2);
+  else if(k==="ok"){const v=npBuf.replace(/\.$/,"");if(v==="")delete data[npId];else data[npId]=v;if(byId(npId).a==="yıl"){if(npU==="ay")data["birim_"+npId]="ay";else delete data["birim_"+npId]}persist();
+    refreshCtl(npId);$("#np").classList.remove("on");return}
   npShow()});
 
 /* tabloya yazılacak satırlar */
@@ -618,7 +646,7 @@ function recId(){if(!data.__rec){const d=new Date(),z=n=>String(n).padStart(2,"0
   data.__rec=(kind==="kopek"?"K":"C")+"-"+d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+"-"+z(d.getHours())+z(d.getMinutes())+"-"+Math.random().toString(36).slice(2,6).toUpperCase()}return data.__rec}
 function sheetData(docUrl){const KN=kind==="kopek"?"Köpek":"Kedi",ID=IDENT[kind],rid=recId(),now=new Date().toLocaleString("tr-TR");
   const main={"Kayıt No":rid,"Kayıt zamanı":now},ident={"Kayıt No":rid,"Tür":KN,"Kayıt zamanı":now,"Belge":docUrl||""},tables=[];
-  const txt=k=>{const d=data["ink_"+k],t=data["txt_"+k];return t||(d&&d.s&&d.s.length?"(okunmadı)":"")};
+  const txt=k=>{const d=data["ink_"+k],t=txtOf(k);return t||(d&&d.s&&d.s.length?"(okunmadı)":"")};
   let sec="",parent="";const used={};
   const H=(it,extra)=>{let h=sec+" | "+(it.sub&&parent?parent.slice(0,50)+" → ":"")+it.label+(extra?" → "+extra:"");h=h.replace(/\s+/g," ").trim();let k=h,n=2;while(used[k]&&used[k]!==it.id+(extra||""))k=h+" ("+(n++)+")";used[k]=it.id+(extra||"");return k};
   const one=it=>{const v=data[it.id];
@@ -628,7 +656,7 @@ function sheetData(docUrl){const KN=kind==="kopek"?"Köpek":"Kedi",ID=IDENT[kind
     if(ID[it.label]!==undefined&&["t","a"].includes(it.type)){ident[ID[it.label]]=txt(it.id);return}
     switch(it.type){
     case"d":case"yn":case"r":main[H(it)]=v||"";break;
-    case"num":main[H(it)]=v!==undefined&&v!==""?Number(v):"";break;
+    case"num":{const y=it.a==="yıl"?yearsOf(v,data["birim_"+it.id]):(v!==undefined&&v!==""?Number(v):null);main[H(it)]=y===null?"":Math.round(y*100)/100;break}
     case"c":it.a.forEach(o=>main[H(it,o)]=(v||[]).includes(o)?1:0);break;
     case"t":case"a":main[H(it)]=txt(it.id);break;
     case"g":it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=ri+"_"+ci;main[H(it,r+" / "+c)]=it.c==="ehb"?((v||{})[k]||""):txt(it.id+":"+k)}));break;
@@ -638,7 +666,7 @@ function sheetData(docUrl){const KN=kind==="kopek"?"Köpek":"Kedi",ID=IDENT[kind
       for(let r=0;r<it.b;r++){const vals=it.a.map((c,ci)=>txt(it.id+":"+r+":"+ci));if(vals.some(x=>x)){const o={"Kayıt No":rid,"Satır":r+1};it.a.forEach((c,ci)=>{if(!skip(c))o[c]=vals[ci]});rows.push(o)}}
       if(rows.length)tables.push({tab,rows});main[H(it)+" (satır sayısı)"]=rows.length;break}}};
   items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));
-  main["Görüşme notları (otomatik)"]=notesText();main["Karar desteği (kullanıldı)"]=data.__karar&&data.__karar.kullan?dsText(data.__karar.sonuc):"";main["Ek dosya sayısı"]=(data.__ekler||[]).length;
+  main["Görüşme özeti (otomatik)"]=(data.__notlar&&data.__notlar.ayrinti)||"";main["Görüşme notları (otomatik)"]=notesText();main["Karar desteği (kullanıldı)"]=data.__karar&&data.__karar.kullan?dsText(data.__karar.sonuc):"";main["Ek dosya sayısı"]=(data.__ekler||[]).length;
   ident["Ek dosyalar klasörü"]=((data.__ekler||[])[0]||{}).klasor||"";
   return[{tab:KN,rows:[main]},{tab:"Kimlik",rows:[ident]},...tables]}
 
@@ -649,39 +677,83 @@ function inkLines(strokes){const S=strokes.filter(s=>s.c!=="#ffffff"&&s.p.length
   return L.sort((a,b)=>a.y0-b.y0).map(l=>{const m=l.m.sort((a,b)=>a.i-b.i);let x0=1e9,x1=-1e9;m.forEach(st=>{x0=Math.min(x0,st.x0);x1=Math.max(x1,st.x1)});
     return{w:Math.max(1,x1-x0),h:Math.max(1,l.y1-l.y0),strokes:m.map(st=>st.s.p.map(q=>[Math.round(q[0]-x0),Math.round(q[1]-l.y0),q[3]||0]))}})}
 
-/* görüşme sırasında sesle doldurma */
-const isPend=k=>{const s=data["src_"+k];return!!(s&&!s.ok)};
-const sesCls=id=>isPend(id)?" ses":"";
-const sesBtns=k=>`<button type="button" class="useses" data-useses="${k}">Kullan</button><button type="button" class="unses" data-unses="${k}">Kaldır</button>`;
-function sesNote(id){const s=data["src_"+id];if(!s||s.ok)return"";return`<div class="sesnote"><b>Sesten</b>${s.q?` · “${esc(s.q)}”`:""} ${sesBtns(id)}</div>`}
-function gridSesNote(it){const keys=[];it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=it.id+":"+ri+"_"+ci;if(isPend(k))keys.push(k)}));
-  if(!keys.length)return"";return`<div class="sesnote"><b>Sesten</b> · ${keys.length} hücre sarıyla işaretli <button type="button" class="useses" data-usegrid="${it.id}">Hepsini kullan</button><button type="button" class="unses" data-ungrid="${it.id}">Hepsini kaldır</button></div>`}
-function pendingKeys(){return Object.keys(data).filter(k=>k.startsWith("src_")&&!data[k].ok).map(k=>k.slice(4))}
-function unsesKey(k){const [id,a]=k.split(":"),it=byId(id);delete data["src_"+k];if(!it)return id;
-  if(it.type==="g"&&it.c==="ehb"){const g=data[id]||{};delete g[a];data[id]=g}else if(k.includes(":")||["t","a"].includes(it.type))delete data["txt_"+k];else delete data[id];return id}
-function useKey(k){const s=data["src_"+k];if(s)s.ok=true;return k.split(":")[0]}
-function sesAllUI(){const n=pendingKeys().length,b=$("#bSesAll");if(b){b.hidden=!n;b.textContent=`Sesten gelenlerin hepsini kullan (${n})`}}
-function rerenderField(id){const el=document.querySelector(`[data-fid="${CSS.escape(id)}"]`),it=byId(id);if(!el||!it)return;const t=document.createElement("div");t.innerHTML=fieldHTML(it);const n=t.firstElementChild;el.replaceWith(n);
-  n.querySelectorAll(".ink").forEach(w=>{const d=data["ink_"+w.dataset.ink];if(d){if(d.h)w.style.height=d.h+"px";if(d.s.length)fitInk(w)}});n.querySelectorAll("[data-ocr]").forEach(e=>showOcr(e.dataset.ocr))}
-document.addEventListener("click",e=>{let b;
-  if(b=e.target.closest("[data-unses]")){const id=unsesKey(b.dataset.unses);persist();rerenderField(id);sesAllUI();return}
-  if(b=e.target.closest("[data-useses]")){if(b.dataset.useses){const id=useKey(b.dataset.useses);persist();rerenderField(id);sesAllUI()}else if(b.dataset.usegrid){const id=b.dataset.usegrid;pendingKeys().filter(k=>k.split(":")[0]===id).forEach(useKey);persist();rerenderField(id);sesAllUI()}return}
-  if(b=e.target.closest("[data-ungrid]")){const id=b.dataset.ungrid;pendingKeys().filter(k=>k.split(":")[0]===id).forEach(unsesKey);persist();rerenderField(id);sesAllUI();return}
-  if(b=e.target.closest("#bSesAll")){const ids=new Set(pendingKeys().map(useKey));persist();ids.forEach(rerenderField);sesAllUI()}});
-const SES={on:false,busy:false,last:0,lastLen:0,t0:0,timer:null,loop:null,partial:""};
-const isEmptyInk=k=>{const d=data["ink_"+k];return!(d&&d.s&&d.s.length)&&!data["txt_"+k]};
+/* görüşme sırasında sesle doldurma: ses alanlara yazmaz, her sorunun altında taslak öneri bırakır */
+const INKT=["t","a"];
+const onerKeys=()=>Object.keys(data).filter(k=>k.startsWith("oner_")).map(k=>k.slice(5));
+const isInkKey=k=>{const [id,a]=k.split(":"),it=byId(id);if(!it)return false;return INKT.includes(it.type)||it.type==="tb"||(it.type==="g"&&it.c!=="ehb")};
+const unitOf=id=>{const it=byId(id);return it&&it.a==="yıl"?(data["birim_"+id]||"yıl"):(it&&it.a)||""};
+function txtOf(k){const t=(data["txt_"+k]||"").trim(),s=(data["sesv_"+k]||"").trim();return t&&s?t+" | sesten: "+s:t||s}
+function curVal(k){const [id,a]=k.split(":"),it=byId(id);if(!it)return"";
+  if(isInkKey(k))return txtOf(k);
+  if(it.type==="g")return(data[id]||{})[a]||"";
+  return data[id]}
+function pendingKeys(){return onerKeys().filter(k=>data["oner_"+k].d==="bekliyor")}
+function onerVal(k,o){const it=byId(k.split(":")[0]);if(!it)return"";const v=o.v;
+  if(Array.isArray(v))return v.join(", ");if(it.type==="d")return String(v).split("-").reverse().join(".");
+  if(it.type==="num")return fmtNum(v)+" "+(o.birim||it.a||"");if(it.type==="g"&&it.c==="ehb")return({E:"Evet",H:"Hayır",B:"Bilmiyor"})[v]||v;return String(v)}
+function onerLabel(k){const [id,a,b]=k.split(":"),it=byId(id);if(!it||a===undefined)return"";
+  if(it.type==="tb")return `${+a+1}. satır, ${it.a[+b]}: `;const [ri,ci]=a.split("_");return `${it.a[+ri]} / ${it.b[+ci]}: `}
+const onerBox=id=>`<div class="oner" data-oner="${id}"></div>`;
+function renderOner(id){const el=document.querySelector(`[data-oner="${CSS.escape(id)}"]`);if(!el)return;
+  const keys=onerKeys().filter(k=>k===id||k.startsWith(id+":"));el.innerHTML="";el.className="oner";if(!keys.length)return;
+  const wait=keys.filter(k=>data["oner_"+k].d==="bekliyor");el.classList.add(wait.length?"on":"done");
+  let h=`<div class="oh"><b>Öneri (sesten)</b>${wait.length>1?` <button type="button" class="useses" data-onall="${id}">Hepsini kullan (${wait.length})</button>`:""}</div>`;
+  keys.forEach(k=>{const o=data["oner_"+k],L=esc(onerLabel(k)),V=esc(onerVal(k,o)),Q=o.q&&o.q.replace(/[.…\s]/g,"")?` <span class="oq" data-q="${esc(o.q)}" title="Dökümde göster">“${esc(o.q)}”</span>`:"";
+    if(o.d==="bekliyor")h+=`<div class="or">${L}<b>${V}</b>${Q} <button type="button" class="useses" data-onuse="${k}">Kullan</button><button type="button" class="unses" data-ondel="${k}">Kaldır</button></div>`;
+    else h+=`<div class="or ${o.d}">${L}${o.d==="kullanildi"?"✓ Kullanıldı: ":"Kaldırıldı: "}${V} <button type="button" class="unses" data-onundo="${k}">Geri al</button></div>`});
+  el.innerHTML=h}
+/* bir alanın düğmelerini yeniden çizmeden günceller (kalem alanlarına dokunmaz) */
+function refreshCtl(k){const [id,a]=k.split(":"),it=byId(id);if(!it)return;const v=data[id];
+  if(isInkKey(k)){showOcr(k);return}
+  const box=document.querySelector(`[data-fid="${CSS.escape(id)}"]`);if(!box)return;
+  if(it.type==="g"){const b=box.querySelector(`.ehb[data-k="${CSS.escape(a)}"]`);if(b){const x=(v||{})[a]||"";b.dataset.v=x;b.textContent=x||"–"}return}
+  if(it.type==="num"){const b=box.querySelector("[data-num]");if(b)b.innerHTML=numTxt(id);box.querySelectorAll("[data-unit]").forEach(u=>u.setAttribute("aria-pressed",u.dataset.u===unitOf(id)));return}
+  if(it.type==="d"){const i=box.querySelector("input");if(i)i.value=v||"";return}
+  box.querySelectorAll("[data-pick]").forEach(b=>b.setAttribute("aria-pressed",it.type==="c"?(v||[]).includes(b.dataset.v):v===b.dataset.v))}
+function onerUse(k){const o=data["oner_"+k];if(!o||o.d!=="bekliyor")return;const [id,a]=k.split(":"),it=byId(id);if(!it)return;
+  if(isInkKey(k)){o.prev=data["sesv_"+k];data["sesv_"+k]=String(o.v)}
+  else if(it.type==="g"){const g=data[id]||{};o.prev=g[a];g[a]=o.v;data[id]=g}
+  else if(it.type==="num"){o.prev={v:data[id],b:data["birim_"+id]};data[id]=String(o.v);if(it.a==="yıl"){if(o.birim==="ay")data["birim_"+id]="ay";else delete data["birim_"+id]}}
+  else if(it.type==="c"){o.prev=data[id];data[id]=[...new Set([...(data[id]||[]),...(o.v||[])])]}
+  else{o.prev=data[id];data[id]=o.v}
+  o.d="kullanildi";refreshCtl(k)}
+function onerUndo(k){const o=data["oner_"+k];if(!o)return;const [id,a]=k.split(":"),it=byId(id);
+  if(o.d==="kullanildi"&&it){const p=o.prev;
+    if(isInkKey(k)){if(p===undefined)delete data["sesv_"+k];else data["sesv_"+k]=p}
+    else if(it.type==="g"){const g=data[id]||{};if(p===undefined)delete g[a];else g[a]=p;data[id]=g}
+    else if(it.type==="num"){if(!p||p.v===undefined)delete data[id];else data[id]=p.v;if(p&&p.b)data["birim_"+id]=p.b;else delete data["birim_"+id]}
+    else{if(p===undefined)delete data[id];else data[id]=p}
+    refreshCtl(k)}
+  delete o.prev;o.d="bekliyor"}
+function sesAllUI(){const n=pendingKeys().length,b=$("#bSesAll");if(b){b.hidden=!n;b.textContent=`Sesten gelen önerilerin hepsini kullan (${n})`}}
+document.addEventListener("click",e=>{let b,ids=new Set();
+  if(b=e.target.closest("[data-onuse]")){const k=b.dataset.onuse;onerUse(k);ids.add(k.split(":")[0])}
+  else if(b=e.target.closest("[data-ondel]")){const k=b.dataset.ondel,o=data["oner_"+k];if(o)o.d="kaldirildi";ids.add(k.split(":")[0])}
+  else if(b=e.target.closest("[data-onundo]")){const k=b.dataset.onundo;onerUndo(k);ids.add(k.split(":")[0])}
+  else if(b=e.target.closest("[data-onall]")){const id=b.dataset.onall;pendingKeys().filter(k=>k.split(":")[0]===id).forEach(onerUse);ids.add(id)}
+  else if(b=e.target.closest("#bSesAll")){pendingKeys().forEach(k=>{onerUse(k);ids.add(k.split(":")[0])})}
+  else return;
+  persist();ids.forEach(renderOner);sesAllUI()});
+/* eski sürümdeki "src_" işaretlerini öneriye çevir */
+function migrateSrc(){Object.keys(data).filter(k=>k.startsWith("src_")).forEach(sk=>{const k=sk.slice(4),s=data[sk]||{},[id,a]=k.split(":"),it=byId(id);delete data[sk];if(!it)return;
+  const ink=isInkKey(k),strokes=ink&&data["ink_"+k]&&data["ink_"+k].s&&data["ink_"+k].s.length;
+  const v=ink?data["txt_"+k]:it.type==="g"?(data[id]||{})[a]:data[id];if(v===undefined||v==="")return;
+  if(s.ok){if(ink&&!strokes){data["sesv_"+k]=v;delete data["txt_"+k]}data["oner_"+k]={v,q:s.q||"",d:"kullanildi"}}
+  else{data["oner_"+k]={v,q:s.q||"",d:"bekliyor"};if(ink)delete data["txt_"+k];else if(it.type==="g"){const g=data[id]||{};delete g[a];data[id]=g}else delete data[id]}})}
+const SES={gen:0,accept:false,on:false,busy:false,again:false,last:0,lastLen:0,t0:0,timer:null,loop:null,partial:""};
+/* bütün sorular gönderilir; dolu olanların mevcut değeri "m" ile belirtilir */
 function sesQuestions(){const out=[];let sec="",parent="";
   const one=it=>{if(it.type==="h"){sec=it.label;parent="";return}if(/Onam/.test(sec))return;if(["h3","n","p","s","photo"].includes(it.type))return;if(!it.sub)parent=it.label;
-    const s=(it.sub&&parent!==it.label?parent+" → ":"")+it.label,v=data[it.id],g=sec,P=o=>out.push(Object.assign(o,{g}));
+    const s=(it.sub&&parent!==it.label?parent+" → ":"")+it.label,v=data[it.id],g=sec,P=(o,m)=>{if(m!==undefined&&m!==""&&!(Array.isArray(m)&&!m.length))o.m=Array.isArray(m)?m.join(", "):String(m).slice(0,200);out.push(Object.assign(o,{g}))};
     switch(it.type){
-    case"yn":if(!v)P({id:it.id,s,t:"yn"});break;
-    case"r":if(!v)P({id:it.id,s,t:"r",o:it.a});break;
-    case"c":if(!(v||[]).length)P({id:it.id,s,t:"c",o:it.a});break;
-    case"num":if(v===undefined||v==="")P({id:it.id,s,t:"num",u:it.a});break;
-    case"d":if(!v)P({id:it.id,s,t:"d"});break;
-    case"t":case"a":if(isEmptyInk(it.id))P({id:it.id,s,t:it.type});break;
-    case"tb":{let empty=true;for(let r=0;r<it.b;r++)for(let c=0;c<it.a.length;c++)if(!isEmptyInk(it.id+":"+r+":"+c))empty=false;if(empty)P({id:it.id,s,t:"tb",o:it.a,max:it.b});break}
-    case"g":it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=ri+"_"+ci;if(it.c==="ehb"){if(!(v||{})[k])P({id:it.id+":"+k,s:s+" — "+r+" / "+c,t:"ehb"})}else if(isEmptyInk(it.id+":"+k))P({id:it.id+":"+k,s:s+" — "+r+" / "+c,t:"t"})}));break}};
+    case"yn":P({id:it.id,s,t:"yn"},v);break;
+    case"r":P({id:it.id,s,t:"r",o:it.a},v);break;
+    case"c":P({id:it.id,s,t:"c",o:it.a},v);break;
+    case"num":P({id:it.id,s,t:"num",u:it.a},v!==undefined&&v!==""?v+" "+unitOf(it.id):"");break;
+    case"d":P({id:it.id,s,t:"d"},v);break;
+    case"t":case"a":P({id:it.id,s,t:it.type},txtOf(it.id));break;
+    case"tb":{const rows=[];for(let r=0;r<it.b;r++){const c=it.a.map((x,ci)=>txtOf(it.id+":"+r+":"+ci));if(c.some(Boolean))rows.push(c.join(" ; "))}P({id:it.id,s,t:"tb",o:it.a,max:it.b},rows.join(" || "));break}
+    case"g":it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=ri+"_"+ci;P({id:it.id+":"+k,s:s+" — "+r+" / "+c,t:it.c==="ehb"?"ehb":"t"},it.c==="ehb"?(v||{})[k]:txtOf(it.id+":"+k))}));break}};
   items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));return out}
 /* cevapları esnek eşleştir: büyük/küçük harf, ek ve kısaltma farklarını tolere et */
 const nrm=x=>String(x==null?"":x).toLocaleLowerCase("tr").replace(/[.,;:!?"'()]/g," ").replace(/\s+/g," ").trim();
@@ -689,54 +761,84 @@ function matchOpt(val,opts){const v=nrm(val);if(!v)return null;let m=opts.find(o
   m=opts.find(o=>{const o2=nrm(o);return v.startsWith(o2)||o2.startsWith(v)});if(m)return m;
   m=opts.find(o=>{const w=nrm(o).split(" ")[0];return w.length>2&&v.includes(w)});return m||null}
 function yesNo(val){const v=nrm(val);if(/^(evet|e|var|olur|yes|true|1)\b/.test(v))return"Evet";if(/^(hayır|hayir|h|yok|değil|degil|no|false|0)\b/.test(v))return"Hayır";return null}
-function toNum(val){if(typeof val==="number")return val;const m=String(val||"").replace(",",".").match(/-?\d+(\.\d+)?/);if(!m)return null;let x=Number(m[0]);if(/ay\b/.test(nrm(val))&&!/yıl|yas|yaş/.test(nrm(val)))x=x/12;return isFinite(x)?x:null}
+/* birim "yıl" olan alanlarda ay olarak söyleneni ay olarak tutar */
+function toNumU(val,unit){if(val===null||val===undefined)return null;const s=String(val),n=nrm(s),m=s.replace(",",".").match(/-?\d+(\.\d+)?/);if(!m)return null;const x=Number(m[0]);if(!isFinite(x))return null;
+  if(unit==="yıl"){if(/\d\s*ay/.test(n)||(/(^|\s)ay/.test(n)&&!/yıl|yas|yaş/.test(n)))return{v:x,birim:"ay"};if(/\d\s*hafta/.test(n))return{v:Math.round(x/4.345*10)/10,birim:"ay"};return{v:x,birim:"yıl"}}
+  return{v:Math.round(x*100)/100}}
+const yearsOf=(v,b)=>v===undefined||v===""?null:Number(v)/(b==="ay"?12:1);
 function toEHB(val){const v=nrm(val);if(/^(e|evet|var)\b/.test(v))return"E";if(/^(h|hayır|hayir|yok)\b/.test(v))return"H";if(/^(b|bilmiyor|bilinmiyor|emin değil)/.test(v))return"B";return null}
 function toDate(val){const v=String(val||"").trim();let m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return v;m=v.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);if(m)return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");return null}
+/* sesten gelen cevapları öneri olarak kaydeder; alanların değerine dokunmaz */
 function applySes(list){const touchedF=new Set();let n=0;
+  const put=(key,v,q,same,extra)=>{if(same)return;const old=data["oner_"+key],eq=old&&JSON.stringify(old.v)===JSON.stringify(v);
+    if(eq){if(q)old.q=q;return}data["oner_"+key]=Object.assign({v,q,d:"bekliyor"},extra||{});touchedF.add(key.split(":")[0]);n++};
   (list||[]).forEach(c=>{if(!c||typeof c.id!=="string")return;const [id,k]=c.id.split(":"),it=byId(id);if(!it)return;const q=String(c.alinti||"").slice(0,140),val=c.deger;
-    if(val===null||val===undefined||val==="")if(it.type!=="tb")return;
-    const mark=key=>{data["src_"+key]={q};touchedF.add(id);n++};
-    if(it.type==="g"&&k!==undefined){const [ri,ci]=k.split("_");if(it.a[+ri]===undefined||it.b[+ci]===undefined)return;
-      if(it.c==="ehb"){const g=data[id]||{},x=toEHB(val);if(!g[k]&&x){g[k]=x;data[id]=g;mark(id+":"+k)}}
-      else if(isEmptyInk(id+":"+k)&&val){data["txt_"+id+":"+k]=String(val);mark(id+":"+k)}return}
+    if((val===null||val===undefined||val==="")&&it.type!=="tb")return;
+    if(it.type==="g"&&k!==undefined){const [ri,ci]=k.split("_");if(it.a[+ri]===undefined||it.b[+ci]===undefined)return;const key=id+":"+k;
+      if(it.c==="ehb"){const x=toEHB(val);if(x)put(key,x,q,(data[id]||{})[k]===x)}
+      else{const x=String(val).trim();if(x)put(key,x,q,nrm(txtOf(key))===nrm(x))}return}
     switch(it.type){
-    case"yn":{const x=yesNo(val);if(!data[id]&&x){data[id]=x;mark(id)}break}
-    case"r":{const x=matchOpt(val,it.a);if(!data[id]&&x){data[id]=x;mark(id)}break}
-    case"c":{const a=[...new Set((Array.isArray(val)?val:String(val).split(/[;,]/)).map(x=>matchOpt(x,it.a)).filter(Boolean))];if(!(data[id]||[]).length&&a.length){data[id]=a;mark(id)}break}
-    case"num":{const x=toNum(val);if((data[id]===undefined||data[id]==="")&&x!==null){data[id]=String(Math.round(x*100)/100);mark(id)}break}
-    case"d":{const x=toDate(val);if(!data[id]&&x){data[id]=x;mark(id)}break}
-    case"t":case"a":if(isEmptyInk(id)&&String(val).trim()){data["txt_"+id]=String(val).trim();mark(id)}break;
-    case"tb":{const rows=Array.isArray(c.satirlar)?c.satirlar:Array.isArray(val)?val:[];rows.slice(0,it.b).forEach((row,r)=>(Array.isArray(row)?row:[row]).slice(0,it.a.length).forEach((x,ci)=>{const key=id+":"+r+":"+ci;if(x&&isEmptyInk(key)){data["txt_"+key]=String(x);data["src_"+key]={q};touchedF.add(id);n++}}));break}}});
-  if(n){persist();touchedF.forEach(rerenderField)}sesAllUI();return n}
+    case"yn":{const x=yesNo(val);if(x)put(id,x,q,data[id]===x);break}
+    case"r":{const x=matchOpt(val,it.a);if(x)put(id,x,q,data[id]===x);break}
+    case"c":{const a=[...new Set((Array.isArray(val)?val:String(val).split(/[;,]/)).map(x=>matchOpt(x,it.a)).filter(Boolean))];if(a.length)put(id,a,q,a.every(x=>(data[id]||[]).includes(x)));break}
+    case"num":{const x=toNumU(val,it.a);if(x)put(id,x.v,q,yearsOf(data[id],data["birim_"+id])===yearsOf(x.v,x.birim),x.birim?{birim:x.birim}:null);break}
+    case"d":{const x=toDate(val);if(x)put(id,x,q,data[id]===x);break}
+    case"t":case"a":{const x=String(val).trim();if(x)put(id,x,q,nrm(txtOf(id)).includes(nrm(x)));break}
+    case"tb":{const rows=Array.isArray(c.satirlar)?c.satirlar:Array.isArray(val)?val:[];rows.slice(0,it.b).forEach((row,r)=>(Array.isArray(row)?row:[row]).slice(0,it.a.length).forEach((x,ci)=>{const key=id+":"+r+":"+ci;x=String(x==null?"":x).trim();if(x)put(key,x,q,nrm(txtOf(key))===nrm(x))}));break}}});
+  if(n)persist();touchedF.forEach(renderOner);sesAllUI();return n}
 function sesUI(){const b=$("#bSes");if(!b)return;b.hidden=!(BK.speech&&BK.sesOn);b.setAttribute("aria-pressed",SES.on);
-  b.textContent=SES.on?"Kaydı bitir":"Görüşmeyi dinle";$("#sesBar").hidden=!SES.on&&!SES.final;
+  b.textContent=SES.on?"Kaydı bitir":data.__dokum?"Dinlemeye devam et":"Görüşmeyi dinle";$("#sesBar").hidden=!SES.on&&!SES.final&&!data.__dokum;$("#sesBar .rec").hidden=!SES.on;$("#sesTime").hidden=!SES.on;$("#bDokum").hidden=!data.__dokum&&!SES.partial;
   const f=$("#bFill");if(f){f.hidden=!(BK.sesOn&&data.__dokum&&!SES.on);f.disabled=SES.busy}
   if(SES.on){const s=Math.floor((Date.now()-SES.t0)/1000);$("#sesTime").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
   const d=data.__dokum||"";$("#sesText").textContent=(d.length>320?"…"+d.slice(-320):d)+(SES.partial?" "+SES.partial:"")}
+/* döküm: saatli parçalar halinde tutulur, yan panelde kaydırılarak okunur */
+function addSeg(t){t=String(t||"").trim();if(!t)return;data.__dokum=((data.__dokum||"")+" "+t).trim();
+  const P=data.__dokumP=data.__dokumP||[];P.push({z:new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit",second:"2-digit"}),x:t})}
+function dokumSegs(){const P=data.__dokumP;if(P&&P.length)return P;return data.__dokum?[{z:"",x:data.__dokum}]:[]}
+function dokumUI(){const D=$("#dokumDr");if(D.hidden)return;const L=$("#dokumList"),atEnd=L.scrollHeight-L.scrollTop-L.clientHeight<60;
+  L.innerHTML="";const segs=dokumSegs();
+  segs.forEach((g,i)=>{const d=document.createElement("div");d.className="dseg";d.dataset.i=i;if(g.z){const t=document.createElement("time");t.textContent=g.z;d.append(t)}d.append(g.x);L.append(d)});
+  if(SES.partial){const d=document.createElement("div");d.className="dseg part";d.textContent=SES.partial+" …";L.append(d)}
+  if(!segs.length&&!SES.partial){const d=document.createElement("p");d.className="note";d.textContent="Henüz döküm yok.";L.append(d)}
+  const w=(data.__dokum||"").split(/\s+/).filter(Boolean).length;$("#dokumInfo").textContent=w?w+" kelime":"";
+  if(atEnd)L.scrollTop=L.scrollHeight}
+function dokumOpen(q){const D=$("#dokumDr");D.hidden=false;dokumUI();if(!q){const L=$("#dokumList");L.scrollTop=L.scrollHeight;return}
+  const n=nrm(q).replace(/…/g,"").trim(),segs=dokumSegs();let i=segs.findIndex(g=>nrm(g.x).includes(n));
+  if(i<0){const w=n.split(" ").filter(x=>x.length>3);let best=-1,bs=0;segs.forEach((g,j)=>{const t=nrm(g.x),sc=w.filter(x=>t.includes(x)).length;if(sc>bs){bs=sc;best=j}});i=best}
+  if(i>=0){const el=$("#dokumList").querySelector(`[data-i="${i}"]`);if(el){el.classList.add("hl");el.scrollIntoView({block:"center"})}}}
+$("#bDokum").addEventListener("click",()=>dokumOpen());
+$("#bDokumX").addEventListener("click",()=>{$("#dokumDr").hidden=true});
+document.addEventListener("click",e=>{const q=e.target.closest(".oq[data-q]");if(q)dokumOpen(q.dataset.q)});
+/* yeni hasta ya da tür değişince önceki görüşmenin bütün izlerini temizle */
+function sesReset(){SES.gen++;SES.on=false;SES.accept=false;SES.busy=false;SES.again=false;SES.final=false;SES.partial="";clearInterval(SES.timer);dsJob=null;
+  $("#sesState").textContent="";$("#sesText").textContent="";$("#dsState").textContent="";$("#dokumDr").hidden=true;$("#dokumList").innerHTML="";sesUI()}
 /* kayıt bitince: bütün dökümden formu bölüm bölüm doldur, sonra önemli notları çıkar */
-async function sesFill(){if(SES.busy||!BK.sesleDoldur||!BK.sesOn)return;const d=(data.__dokum||"").trim();if(!d)return;
-  SES.busy=true;SES.final=true;sesUI();const st=$("#sesState");let total=0,errs=0;
+async function sesFill(){if(!BK.sesleDoldur||!BK.sesOn)return;if(SES.busy){SES.again=true;return}const d=(data.__dokum||"").trim();if(!d)return;
+  SES.busy=true;SES.again=false;SES.final=true;sesUI();const st=$("#sesState"),gen=SES.gen,live=()=>gen===SES.gen;let total=0,errs=0,done=0;
   const qs=sesQuestions(),groups=[];qs.forEach(q=>{let g=groups[groups.length-1];if(!g||g.name!==q.g||g.list.length>=35){g={name:q.g,list:[]};groups.push(g)}g.list.push(q)});
   const dok=d.slice(-150000);
-  for(let i=0;i<groups.length;i++){st.textContent=`Form dolduruluyor (${i+1}/${groups.length}): ${groups[i].name}`;
-    try{const r=await BK.sesleDoldur(dok,groups[i].list.map(({g,...x})=>x),true);total+=applySes(r&&r.cevaplar)}
-    catch(e){errs++;st.textContent="Bir bölüm doldurulamadı: "+BK.errKind(e)}}
-  if(BK.sesNotlari){st.textContent="Önemli notlar çıkarılıyor…";
-    try{const r=await BK.sesNotlari(dok,kind);data.__notlar=r||null;persist();renderNotes()}catch(e){errs++}}
-  st.textContent=`${total} alan sesten dolduruldu`+(errs?` · ${errs} adım başarısız oldu, "Dökümden formu doldur" ile tekrar deneyebilirsiniz`:"")+" · sarı alanları kontrol edip Kullan ya da Kaldır'a basın";
-  SES.busy=false;sesUI()}
+  /* notlar ve özet, form bölümleriyle aynı anda hazırlanır */
+  const notes=BK.sesNotlari?BK.sesNotlari(dok,kind).then(r=>{if(!live())return;data.__notlar=r||null;persist();renderNotes()}).catch(()=>{errs++}):Promise.resolve();
+  const show=()=>{if(live()&&!SES.on)st.textContent=`Öneriler hazırlanıyor: ${done}/${groups.length} bölüm · yazmaya devam edebilirsiniz`};show();
+  let next=0;const worker=async()=>{while(next<groups.length){const g=groups[next++];
+    if(!live())return;try{const r=await BK.sesleDoldur(dok,g.list.map(({g,...x})=>x),true);if(live())total+=applySes(r&&r.cevaplar)}catch(e){errs++}done++;show()}};
+  await Promise.all([worker(),worker(),worker()]);await notes;
+  if(!live()){SES.busy=false;return}
+  if(!SES.on)st.textContent=`${total} yeni öneri hazır`+(errs?` · ${errs} adım başarısız oldu, "Dökümden formu doldur" ile tekrar deneyebilirsiniz`:"")+" · soruların altındaki sarı kutularda Kullan ya da Kaldır'a basın";
+  SES.busy=false;sesUI();dsPrefetch();if(SES.again&&!SES.on)sesFill()}
 function sesStart(){if(!BK.speech)return;
-  ask("Hasta sahibinden görüşmenin dinlenip yazıya dökülmesi için onay alındı mı? Ses kaydedilmez, yalnızca yazıya dökülen metin forma eklenir.",async()=>{
-    data.__sesOnay=new Date().toLocaleString("tr-TR");persist();
+  const go=async()=>{if(!data.__sesOnay){data.__sesOnay=new Date().toLocaleString("tr-TR");persist()}
     try{await BK.speech.start()}catch(e){$("#sesState").textContent="Mikrofon açılamadı: "+BK.errKind(e);return}
-    SES.on=true;SES.final=false;SES.t0=Date.now();$("#sesState").textContent="Dinleniyor · görüşme bitince \"Kaydı bitir\"e basın";
-    SES.timer=setInterval(sesUI,1000);sesUI()},"Onay alındı, başlat")}
+    SES.on=true;SES.accept=true;SES.final=false;SES.t0=Date.now();$("#sesState").textContent="Dinleniyor · yazmaya devam edebilirsiniz · görüşme bitince \"Kaydı bitir\"e basın";
+    SES.timer=setInterval(sesUI,1000);sesUI()};
+  if(data.__sesOnay)return go();
+  ask("Hasta sahibinden görüşmenin dinlenip yazıya dökülmesi için onay alındı mı? Ses kaydedilmez, yalnızca yazıya dökülen metin forma eklenir.",go,"Onay alındı, başlat")}
 async function sesStop(){if(!SES.on)return;SES.on=false;clearInterval(SES.timer);try{await BK.speech.stop()}catch(e){}
   await new Promise(r=>setTimeout(r,800));
-  if(SES.partial){data.__dokum=((data.__dokum||"")+" "+SES.partial).trim();SES.partial=""}persist();
+  if(SES.partial){addSeg(SES.partial);SES.partial=""}SES.accept=false;persist();dokumUI();
   SES.final=true;sesUI();await sesFill();persist()}
-if(BK.on){BK.on("final",m=>{if(!m.text)return;data.__dokum=((data.__dokum||"")+" "+m.text).trim();SES.partial="";persist();sesUI()});
-  BK.on("partial",m=>{SES.partial=m.text||"";sesUI()});
+if(BK.on){BK.on("final",m=>{if(!m.text||!SES.accept)return;addSeg(m.text);SES.partial="";persist();sesUI();dokumUI()});
+  BK.on("partial",m=>{if(!SES.accept)return;SES.partial=m.text||"";sesUI();dokumUI()});
   BK.on("state",m=>{if(m.state==="idle"&&SES.on&&m.reason&&m.reason!=="stopped"){$("#sesState").textContent="Dinleme durdu: "+m.reason}});
   BK.on("status",m=>{if(m.text)setStatus(m.text,"")})}
 $("#bSes").addEventListener("click",()=>SES.on?sesStop():sesStart());
@@ -746,17 +848,17 @@ $("#bFill").addEventListener("click",()=>{SES.final=true;sesFill()});
 function caseSummary(){const ID=IDENT[kind],lines=[];let sec="";
   const val=it=>{const v=data[it.id];switch(it.type){
     case"yn":case"r":case"d":return v||"";
-    case"num":return v!==undefined&&v!==""?fmtNum(v)+" "+(it.a||""):"";
+    case"num":return v!==undefined&&v!==""?fmtNum(v)+" "+unitOf(it.id):"";
     case"c":return(v||[]).join(", ");
-    case"t":case"a":return data["txt_"+it.id]||"";
-    case"tb":{const rows=[];for(let r=0;r<it.b;r++){const cells=it.a.map((c,ci)=>data["txt_"+it.id+":"+r+":"+ci]||"");if(cells.some(Boolean))rows.push(it.a.map((c,ci)=>c+": "+(cells[ci]||"-")).join("; "))}return rows.join(" | ")}
-    case"g":{const o=[];it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=ri+"_"+ci,x=it.c==="ehb"?(v||{})[k]:data["txt_"+it.id+":"+k];if(x)o.push(r+" / "+c+": "+x)}));return o.join("; ")}
+    case"t":case"a":return txtOf(it.id);
+    case"tb":{const rows=[];for(let r=0;r<it.b;r++){const cells=it.a.map((c,ci)=>txtOf(it.id+":"+r+":"+ci));if(cells.some(Boolean))rows.push(it.a.map((c,ci)=>c+": "+(cells[ci]||"-")).join("; "))}return rows.join(" | ")}
+    case"g":{const o=[];it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=ri+"_"+ci,x=it.c==="ehb"?(v||{})[k]:txtOf(it.id+":"+k);if(x)o.push(r+" / "+c+": "+x)}));return o.join("; ")}
     case"s":return["note","free"].includes(it.a)?(data["txt_"+it.id]||""):"";}return""};
   const one=it=>{if(it.type==="h"){sec=it.label;return}if(/Onam/.test(sec)||ID[it.label]!==undefined)return;if(["h3","n","p","photo"].includes(it.type))return;
-    if(isPend(it.id))return;const x=val(it);if(x&&String(x).trim())lines.push(`${sec} › ${it.label}: ${x}`)};
+    const x=val(it);if(x&&String(x).trim())lines.push(`${sec} › ${it.label}: ${x}`)};
   items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));
   const n=notesText();return("TÜR: "+(kind==="kopek"?"Köpek":"Kedi")+"\n"+lines.join("\n")+(n?"\n\nGÖRÜŞME NOTLARI:\n"+n:"")).slice(0,24000)}
-function caseWeight(){const it=allFields().find(i=>i.type==="num"&&/^Kilo/.test(i.label));if(!it||isPend(it.id))return null;const v=data[it.id];return v?Number(v):null}
+function caseWeight(){const it=allFields().find(i=>i.type==="num"&&/^Kilo/.test(i.label));if(!it)return null;const v=data[it.id];return v?Number(v):null}
 const L=(a)=>Array.isArray(a)?a:[];
 function dsHTML(r,forDoc){const st=forDoc?' style="border-collapse:collapse" border="1" cellpadding="5"':"";let h="";
   if(r.ozet)h+=`<p><i>${esc(r.ozet)}</i></p>`;
@@ -771,11 +873,21 @@ function renderDs(){const P=$("#dsPanel");P.hidden=!(BK.kararDestegi&&driveOk);c
   $("#dsOut").innerHTML=K&&K.sonuc?dsHTML(K.sonuc,false):"";$("#dsAct").hidden=!(K&&K.sonuc);
   $("#dsUsed").textContent=K&&K.kullan?"Kayda eklenecek":"Henüz kayda eklenmedi";$("#bDsUse").hidden=!!(K&&K.kullan);
   P.classList.toggle("ses",!!(K&&K.sonuc&&!K.kullan))}
-$("#bDs").addEventListener("click",async()=>{if(!BK.kararDestegi)return;const st=$("#dsState"),b=$("#bDs");b.disabled=true;
-  st.textContent="Kaynak kütüphanesi taranıyor ve öneri hazırlanıyor (1 dakikaya kadar sürebilir)…";
-  try{const r=await BK.kararDestegi(caseSummary(),kind,caseWeight());r.kilo=caseWeight();data.__karar={sonuc:r,kullan:false,zaman:new Date().toLocaleString("tr-TR")};persist();renderDs();
-    st.textContent=L(r.kullanilan_kaynaklar).length?"Öneri hazır. Kontrol edip Kullan ya da Kaldır'a basın.":"Kaynak kütüphanesinde ilgili bilgi bulunamadı; öneriler sınırlı."}
-  catch(e){st.textContent="Öneri alınamadı: "+BK.errKind(e)}b.disabled=false});
+/* öneri arka planda önceden hazırlanır; vaka değişmediyse düğmeye basınca anında gelir */
+const hashStr=t=>{let h=5381;for(let i=0;i<t.length;i++)h=(h*33^t.charCodeAt(i))>>>0;return h.toString(36)};
+let dsJob=null;
+function dsKey(){return hashStr(kind+"|"+caseWeight()+"|"+caseSummary())}
+function dsRun(){const h=dsKey();if(dsJob&&dsJob.h===h)return dsJob.p;
+  const kg=caseWeight(),gen=SES.gen,p=BK.kararDestegi(caseSummary(),kind,kg).then(r=>{if(gen!==SES.gen)throw new Error("Hasta değişti");r.kilo=kg;data.__dsCache={h,r};persist();return r});
+  dsJob={h,p};p.catch(()=>{}).finally(()=>{if(dsJob&&dsJob.p===p)dsJob=null});return p}
+function dsPrefetch(){if(!BK.kararDestegi||!driveOk)return;const C=data.__dsCache;if(C&&C.h===dsKey())return;
+  dsRun().then(()=>{if(!(data.__karar&&data.__karar.sonuc))$("#dsState").textContent="Öneri arka planda hazırlandı; görmek için düğmeye basın."}).catch(()=>{})}
+function dsShow(r,fresh){data.__karar={sonuc:r,kullan:false,zaman:new Date().toLocaleString("tr-TR")};persist();renderDs();
+  $("#dsState").textContent=(L(r.kullanilan_kaynaklar).length?"Öneri hazır. Kontrol edip Kullan ya da Kaldır'a basın.":"Kaynak kütüphanesinde ilgili bilgi bulunamadı; öneriler sınırlı.")+(fresh?"":" (vaka değişmediği için hazır öneri gösterildi)")}
+$("#bDs").addEventListener("click",async()=>{if(!BK.kararDestegi)return;const st=$("#dsState"),b=$("#bDs");
+  const C=data.__dsCache;if(C&&C.h===dsKey()){dsShow(C.r,false);return}
+  b.disabled=true;st.textContent=dsJob?"Arka planda hazırlanan öneri bekleniyor…":"Kaynak kütüphanesi taranıyor ve öneri hazırlanıyor…";
+  try{dsShow(await dsRun(),true)}catch(e){st.textContent="Öneri alınamadı: "+BK.errKind(e)}b.disabled=false});
 $("#bDsUse").addEventListener("click",()=>{if(data.__karar){data.__karar.kullan=true;persist();renderDs()}});
 $("#bDsDel").addEventListener("click",()=>ask("Karar desteği önerisi kaldırılsın mı?",()=>{delete data.__karar;persist();renderDs();$("#dsState").textContent=""}));
 
@@ -800,12 +912,12 @@ async function procLib(){if(!BK.kaynaklariIsle)return;const b=$("#bLibProc");b.d
 $("#bLibProc").addEventListener("click",procLib);
 
 /* görüşme notları paneli */
-function renderNotes(){const P=$("#notesPanel"),n=data.__notlar;if(!n||(!n.ozet&&!(n.notlar||[]).length)){P.hidden=true;return}P.hidden=false;
-  $("#notesOzet").textContent=n.ozet||"";const L=$("#notesList");L.innerHTML="";let last=null,ul=null;
+function renderNotes(){const P=$("#notesPanel"),n=data.__notlar;if(!n||(!n.ozet&&!n.ayrinti&&!(n.notlar||[]).length)){P.hidden=true;return}P.hidden=false;
+  $("#notesOzet").textContent=n.ozet||"";const A=$("#notesAyr");A.innerHTML="";if(n.ayrinti){const h=document.createElement("h3");h.textContent="Görüşme özeti";A.append(h);String(n.ayrinti).split(/\n+/).filter(Boolean).forEach(x=>{const p=document.createElement("p");p.textContent=x;A.append(p)})}const L=$("#notesList");L.innerHTML="";let last=null,ul=null;
   (n.notlar||[]).forEach(x=>{const b=String(x.baslik||"Diğer");if(b!==last){const h=document.createElement("h3");h.textContent=b;L.append(h);ul=document.createElement("ul");L.append(ul);last=b}
     const li=document.createElement("li");li.textContent=String(x.madde||"");ul.append(li)})}
 $("#bNotesDel").addEventListener("click",()=>ask("Otomatik görüşme notları silinsin mi?",()=>{delete data.__notlar;persist();renderNotes()}));
-function notesText(){const n=data.__notlar;if(!n)return"";return[(n.ozet||""),...(n.notlar||[]).map(x=>`${x.baslik||""}: ${x.madde||""}`)].filter(Boolean).join("\n")}
+function notesText(){const n=data.__notlar;if(!n)return"";return[(n.ozet||""),(n.ayrinti||""),...(n.notlar||[]).map(x=>`${x.baslik||""}: ${x.madde||""}`)].filter(Boolean).join("\n")}
 
 /* önceki terapiler ve dış dosyalar */
 function renderFiles(){const P=$("#filesPanel");P.hidden=!(BK.uploadFile&&driveOk);const L=$("#fileList");L.innerHTML="";
@@ -832,11 +944,12 @@ $("#dlgNo").addEventListener("click",()=>$("#dlg").classList.remove("on"));
 
 /* Drive belgesi */
 function docBody(){const out=[],dash='<span style="color:#999">—</span>';
-  const notesOut=()=>{const N=data.__notlar;if(N&&(N.ozet||(N.notlar||[]).length)){out.push(`<h2 style="color:#17324a">Görüşmeden önemli notlar (otomatik)</h2>${N.ozet?`<p><i>${esc(N.ozet)}</i></p>`:""}`);
+  const notesOut=()=>{const N=data.__notlar;if(N&&(N.ozet||N.ayrinti||(N.notlar||[]).length)){out.push(`<h2 style="color:#17324a">Görüşmeden önemli notlar (otomatik)</h2>${N.ozet?`<p><i>${esc(N.ozet)}</i></p>`:""}${N.ayrinti?`<p><b>Görüşme özeti</b></p>${String(N.ayrinti).split(/\n+/).map(x=>`<p style="text-align:justify">${esc(x)}</p>`).join("")}`:""}`);
     let last=null;(N.notlar||[]).forEach(x=>{if(x.baslik!==last){out.push(`<p><b>${esc(x.baslik||"")}</b></p>`);last=x.baslik}out.push(`<p style="margin-left:18px">• ${esc(x.madde||"")}</p>`)})}
     const K=data.__karar;if(K&&K.kullan&&K.sonuc)out.push(`<h2 style="color:#17324a">Karar desteği (hekim tarafından kayda eklendi)</h2>${dsHTML(K.sonuc,true)}`)};
   const E=data.__ekler||[];if(E.length){out.push(`<h2 style="color:#17324a">Önceki terapiler ve dış dosyalar</h2>`+E.map(f=>`<p>• ${/^https:\/\//.test(f.url||"")?`<a href="${esc(f.url)}">${esc(f.ad||"dosya")}</a>`:esc(f.ad||"dosya")}</p>`).join(""))}
-  const txtLine=k=>{const t=data["txt_"+k];return t?`<br><span style="color:#444">Okunan metin: ${esc(t).replace(/\n/g,"<br>")}</span>`:""};
+  const sesLine=k=>{const t=data["sesv_"+k];return t?`<br><span style="color:#444">Sesten (hekim onayladı): ${esc(t).replace(/\n/g,"<br>")}</span>`:""};
+  const txtLine=k=>{const t=data["txt_"+k];return(t?`<br><span style="color:#444">Okunan metin: ${esc(t).replace(/\n/g,"<br>")}</span>`:"")+sesLine(k)};
   const one=it=>{const v=data[it.id],pad=it.sub?"margin-left:24px;":"";
     switch(it.type){
     case"h":if(/Onam/.test(it.label))notesOut();out.push(`<h2 style="color:#17324a">${esc(it.label)}</h2>`);break;
@@ -844,23 +957,23 @@ function docBody(){const out=[],dash='<span style="color:#999">—</span>';
     case"n":out.push(`<p style="${pad}"><i>${esc(it.label)}</i></p>`);break;
     case"p":out.push(it.a==="bold"?`<p><b>${esc(it.label)}</b></p>`:it.a==="small"?`<p style="font-size:9pt;color:#444">${esc(it.label)}</p>`:`<p style="text-align:justify">${esc(it.label)}</p>`);break;
     case"photo":out.push(`<p><b>${esc(it.label)}</b><br>${v&&/^data:image\/jpeg;base64,/.test(v)?`<img src="${v}" width="340">`:dash}</p>`);break;
-    case"t":case"a":{const im=inkImg(it.id,560),t=data["txt_"+it.id];out.push(`<p style="${pad}"><b>${esc(it.label)}</b><br>${im?im+txtLine(it.id):t?esc(t).replace(/\n/g,"<br>")+(data["src_"+it.id]?' <span style="color:#888">(sesten)</span>':""):dash}</p>`);break}
-    case"num":out.push(`<p style="${pad}"><b>${esc(it.label)}</b><br>${v!==undefined&&v!==""?esc(fmtNum(v)+" "+(it.a||"")):dash}</p>`);break;
+    case"t":case"a":{const im=inkImg(it.id,560),t=data["txt_"+it.id];out.push(`<p style="${pad}"><b>${esc(it.label)}</b><br>${im?im+txtLine(it.id):t||data["sesv_"+it.id]?esc(t||"").replace(/\n/g,"<br>")+sesLine(it.id):dash}</p>`);break}
+    case"num":out.push(`<p style="${pad}"><b>${esc(it.label)}</b><br>${v!==undefined&&v!==""?esc(fmtNum(v)+" "+unitOf(it.id)):dash}</p>`);break;
     case"d":case"yn":case"r":out.push(`<p style="${pad}"><b>${esc(it.label)}</b><br>${v?esc(it.type==="d"?v.split("-").reverse().join("."):v):dash}</p>`);break;
     case"c":out.push(`<p style="${pad}"><b>${esc(it.label)}</b><br>${(v&&v.length)?v.map(x=>"☑ "+esc(x)).join("<br>"):dash}</p>`);break;
     case"tb":{const has=k=>{const d=data["ink_"+k];return d&&d.s&&d.s.length};
-      const rows=Array.from({length:it.b},(_,r)=>r).filter(r=>it.a.some((c,ci)=>has(it.id+":"+r+":"+ci)||data["txt_"+it.id+":"+r+":"+ci]));
+      const rows=Array.from({length:it.b},(_,r)=>r).filter(r=>it.a.some((c,ci)=>has(it.id+":"+r+":"+ci)||txtOf(it.id+":"+r+":"+ci)));
       out.push(`<p style="${pad}"><b>${esc(it.label)}</b></p>`);
-      out.push(rows.length?`<table border="1" cellpadding="5" style="border-collapse:collapse"><tr>${it.a.map(c=>`<th style="background:#eef2f5">${esc(c)}</th>`).join("")}</tr>${rows.map(r=>`<tr>${it.a.map((c,i)=>{const k=it.id+":"+r+":"+i;return `<td>${inkImg(k,200)}${data["txt_"+k]?(has(k)?"<br>":"")+esc(data["txt_"+k]):""}</td>`}).join("")}</tr>`).join("")}</table>`:`<p style="${pad}">${dash}</p>`);break}
+      out.push(rows.length?`<table border="1" cellpadding="5" style="border-collapse:collapse"><tr>${it.a.map(c=>`<th style="background:#eef2f5">${esc(c)}</th>`).join("")}</tr>${rows.map(r=>`<tr>${it.a.map((c,i)=>{const k=it.id+":"+r+":"+i;return `<td>${inkImg(k,200)}${txtOf(k)?(has(k)?"<br>":"")+esc(txtOf(k)):""}</td>`}).join("")}</tr>`).join("")}</table>`:`<p style="${pad}">${dash}</p>`);break}
     case"g":{const g=v||{};out.push(`<p><b>${esc(it.label)}</b>${it.c==="ehb"?" (E: Evet, H: Hayır, B: Bilmiyorum)":""}</p><table border="1" cellpadding="5" style="border-collapse:collapse"><tr><th></th>${it.b.map(c=>`<th style="background:#eef2f5">${esc(c)}</th>`).join("")}</tr>${it.a.map((r,ri)=>`<tr><th style="text-align:left">${esc(r)}</th>${it.b.map((c,ci)=>{const k=it.id+":"+ri+"_"+ci;
-      return `<td>${it.c==="ehb"?esc(g[ri+"_"+ci]||""):inkImg(k,220)+(data["txt_"+k]?"<br>"+esc(data["txt_"+k]):"")}</td>`}).join("")}</tr>`).join("")}</table>`);break}
+      return `<td>${it.c==="ehb"?esc(g[ri+"_"+ci]||""):inkImg(k,220)+(txtOf(k)?"<br>"+esc(txtOf(k)):"")}</td>`}).join("")}</tr>`).join("")}</table>`);break}
     case"s":{const P=pads[it.id];out.push(`<p><b>${esc(it.label)}</b></p>`);
       if(P&&P.strokes.length){const w=it.a==="sig"?300:620;out.push(`<p><img src="${P.cv.toDataURL("image/png")}" width="${w}">${txtLine(it.id)}</p>`)}else out.push(`<p>${dash}</p>`);break}}};
   items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));
-  const srcN=Object.keys(data).filter(k=>k.startsWith("src_")).length;
-  if(data.__dokum){out.push(`<h2 style="color:#17324a">Görüşme dökümü (otomatik)</h2><p style="font-size:9pt;color:#444">Dinleme onayı: ${esc(data.__sesOnay||"")} · Sesten doldurulan alan: ${srcN}. Döküm otomatik çeviridir, hatalı kelimeler içerebilir.</p><p style="font-size:10pt">${esc(data.__dokum)}</p>`)}
+  const srcN=onerKeys().filter(k=>data["oner_"+k].d==="kullanildi").length;
+  if(data.__dokum){out.push(`<h2 style="color:#17324a">Görüşme dökümü (otomatik)</h2><p style="font-size:9pt;color:#444">Dinleme onayı: ${esc(data.__sesOnay||"")} · Sesten gelip hekimin kullandığı öneri: ${srcN}. Döküm otomatik çeviridir, hatalı kelimeler içerebilir.</p><p style="font-size:10pt">${esc(data.__dokum)}</p>`)}
   return out.join("\n")}
-function meta(){const F=FORMS[kind],f=allFields(),get=(l,typed)=>{const i=f.find(x=>x.label===l);return i?(typed?data[i.id]:data["txt_"+i.id])||"":""};
+function meta(){const F=FORMS[kind],f=allFields(),get=(l,typed)=>{const i=f.find(x=>x.label===l);return i?(typed?data[i.id]:txtOf(i.id))||"":""};
   return{pet:get(F.pet).trim(),owner:get(F.owner).trim(),date:get(F.date,true)||today()}}
 
 function save(){if(saving)return;
@@ -868,9 +981,9 @@ function save(){if(saving)return;
   const kv=allFields().find(i=>i.type==="c"&&i.label.startsWith("Kişisel verilerin korunması"));
   const go=()=>{if(kv&&!(data[kv.id]||[]).length){ask("KVKK açık rıza kutusu işaretlenmedi. Form yine de kaydedilsin mi?",doSave,"Yine de kaydet");return}doSave()};
   const pend=pendingKeys();
-  if(pend.length){ask(`${pend.length} alan sesten dolduruldu ama henüz onaylanmadı. Onaylanmamış alanlar kayda alınmadan kaydedilsin mi? (Kaydetmeden önce gözden geçirmek için Vazgeç'e basın.)`,()=>{const ids=new Set(pend.map(unsesKey));persist();ids.forEach(rerenderField);sesAllUI();save()},"Onaylanmamışları çıkar ve kaydet");return}
-  if(data.__savedAt){ask("Bu form daha önce kaydedildi. Tekrar kaydetmek yeni bir belge ve tabloda aynı kayıt numarasıyla yeni bir satır oluşturur. Devam edilsin mi?",go,"Tekrar kaydet");return}
-  go()}
+  const step2=()=>{if(data.__savedAt){ask("Bu form daha önce kaydedildi. Tekrar kaydetmek yeni bir belge ve tabloda aynı kayıt numarasıyla yeni bir satır oluşturur. Devam edilsin mi?",go,"Tekrar kaydet");return}go()};
+  if(pend.length){ask(`Sesten gelen ${pend.length} öneri henüz kullanılmadı. Bunlar kayda girmez, tablette taslak olarak durmaya devam eder. Kaydedilsin mi? (Gözden geçirmek için Vazgeç'e basın.)`,step2,"Kullanılmayanlar olmadan kaydet");return}
+  step2()}
 async function doSave(){if(saving)return;
   saving=true;$("#bSave").disabled=true;
   if(ocrOk&&!ocrOff&&pendingList().length){setStatus("Önce el yazıları okunuyor…","");await runOcr()}
@@ -893,11 +1006,13 @@ async function loadRecent(){const ul=$("#recent");if(!driveOk)return;
     files.forEach(f=>{const li=document.createElement("li");if(f.url&&/^https:\/\//.test(f.url)){const a=document.createElement("a");a.href=f.url;a.target="_blank";a.rel="noopener";a.textContent=f.title||"belge";li.append(a)}else li.textContent=f.title||"belge";ul.append(li)})
   }catch(e){ul.innerHTML="";const li=document.createElement("li");li.className="note";li.textContent="Liste alınamadı ("+(e.message||e.code||"hata")+")";ul.append(li)}}
 
-function newPatient(){if(SES.on){setStatus("Önce görüşme dinlemesini bitirin","err");return}const unsaved=!data.__savedAt&&Object.keys(data).some(k=>k.startsWith("ink_")||(/^f\d+$/.test(k)&&data[k]&&(data[k].length||Object.keys(data[k]).length)&&byId(k)?.type!=="d"));
-  ask(unsaved?"Bu form Drive'a kaydedilmedi. Yine de silip yeni hasta için temiz form açılsın mı?":"Yeni hasta için temiz form açılsın mı?",()=>{clearTimeout(tO);store.del("dk-draft-"+kind);render();setStatus("Temiz form hazır","");scrollTo(0,0)},unsaved?"Sil ve yeni aç":"Evet")}
+function newPatient(){const unsaved=!data.__savedAt&&Object.keys(data).some(k=>k.startsWith("ink_")||(/^f\d+$/.test(k)&&data[k]&&(data[k].length||Object.keys(data[k]).length)&&byId(k)?.type!=="d"));
+  const lis=SES.on?" Süren dinleme durdurulur; önceki görüşmenin dökümü, notları ve önerileri de silinir.":" Önceki görüşmenin dökümü, notları ve önerileri de silinir.";
+  ask((unsaved?"Bu form Drive'a kaydedilmedi. Yine de silip yeni hasta için temiz form açılsın mı?":"Yeni hasta için temiz form açılsın mı?")+lis,()=>{clearTimeout(tO);if(SES.on&&BK.speech){try{BK.speech.stop()}catch(e){}}sesReset();store.del("dk-draft-"+kind);render();setStatus("Temiz form hazır","");scrollTo(0,0)},unsaved?"Sil ve yeni aç":"Evet")}
 
-$("#bKopek").addEventListener("click",()=>{kind="kopek";store.set("dk-kind",kind);render()});
-$("#bKedi").addEventListener("click",()=>{kind="kedi";store.set("dk-kind",kind);render()});
+const kindOk=()=>{if(SES.on){setStatus("Görüşme dinlenirken tür değiştirilemez; önce \"Kaydı bitir\"e basın","err");return false}sesReset();return true};
+$("#bKopek").addEventListener("click",()=>{if(kind==="kopek"||!kindOk())return;kind="kopek";store.set("dk-kind",kind);render()});
+$("#bKedi").addEventListener("click",()=>{if(kind==="kedi"||!kindOk())return;kind="kedi";store.set("dk-kind",kind);render()});
 $("#bSave").addEventListener("click",save);
 $("#bNew").addEventListener("click",newPatient);
 setFinger(fingerOn);render();
