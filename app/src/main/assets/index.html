@@ -116,6 +116,13 @@ td.ses{background:#fff3c4}
 #notesPanel{border-left:4px solid #e0a400}
 .filebtn{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:10px;background:var(--acc);color:#fff;font-weight:700;cursor:pointer}
 #fileList a{color:var(--acc);font-weight:700}
+.useses{min-height:32px;padding:2px 12px;font-size:13px;margin-left:6px;background:#1f6f50;color:#fff;border-color:#1f6f50;font-weight:700}
+#bSesAll{min-height:44px;font-size:15px}
+#libPanel summary{cursor:pointer;list-style:revert}
+#dsPanel{border-left:4px solid #1f6f50}
+#dsPanel.ses{border-left-color:#e0a400}
+#dsOut table{border-collapse:collapse;width:100%;margin:6px 0}
+#dsOut th,#dsOut td{border:1px solid var(--line);padding:6px;font-size:14px}
 #list{margin-top:50px;padding:16px;background:var(--panel);border-radius:14px}
 #list a{color:var(--acc);font-weight:700}
 #list li{margin:6px 0}
@@ -149,6 +156,7 @@ td.ses{background:#fff3c4}
     <button id="bOcr" hidden>Yazıları metne çevir</button>
     <button id="bSes" hidden aria-pressed="false">Görüşmeyi dinle</button>
     <button id="bFill" hidden>Dökümden formu doldur</button>
+    <button id="bSesAll" class="useses" hidden>Sesten gelenlerin hepsini kullan</button>
     <button id="bSet" hidden>Ayarlar</button>
     <span id="ocrNote"></span>
   </div>
@@ -158,7 +166,19 @@ td.ses{background:#fff3c4}
 <main>
   <h1 id="title"></h1>
   <p class="sub">Ankara Üniversitesi Veteriner Fakültesi · Davranış Kliniği</p>
+  <details id="libPanel" class="panel" hidden><summary class="ph">Kaynak kütüphanesi <small>kitaplar, kılavuzlar, makaleler · ilaç dozu önerileri buradan beslenir</small></summary>
+    <p class="note">PDF, Word ya da metin dosyası yükleyin. Dosyalar Drive'da <b>Terapilerim → Kaynaklar</b> klasörüne gider; bu klasöre doğrudan bıraktığınız dosyalar da otomatik işlenir. Metni seçilebilen PDF'ler en iyi sonucu verir; büyük kitapları bölüm bölüm yüklemek daha doğru sayfa/bölüm atfı sağlar.</p>
+    <label class="filebtn"><input type="file" id="libIn" multiple accept=".pdf,.doc,.docx,.txt,.md,application/pdf,text/plain" hidden>Kaynak yükle</label>
+    <button type="button" id="bLibProc">Bekleyenleri şimdi işle</button> <span id="libState" class="note"></span>
+    <ul id="libList"></ul></details>
+  <div id="holder" hidden>
   <section id="notesPanel" class="panel" hidden><div class="ph">Görüşmeden önemli notlar <small>otomatik, kontrol edin</small></div><p id="notesOzet"></p><div id="notesList"></div><button type="button" id="bNotesDel" class="unses">Notları sil</button></section>
+  <section id="dsPanel" class="panel" hidden><div class="ph">Karar desteği: öneri ve ilaç dozu <small>kaynak kütüphanenize ve kayıtlı bilgilere dayanır</small></div>
+    <p class="note">Öneriler yalnızca yüklediğiniz kaynaklardan, kaynak adıyla verilir; dozlar kiloya göre adım adım hesaplanır. Uygulamadan önce kaynağın kendisinden kontrol edin. Gönderilen vaka özetinde kimlik bilgisi yoktur.</p>
+    <button type="button" id="bDs" class="filebtn">Öneri ve ilaç dozu iste</button> <span id="dsState" class="note"></span>
+    <div id="dsOut"></div>
+    <div id="dsAct" hidden><button type="button" id="bDsUse" class="useses">Kullan (kayda ekle)</button><button type="button" id="bDsDel" class="unses">Kaldır</button> <span id="dsUsed" class="note"></span></div></section>
+  </div>
   <section id="filesPanel" class="panel" hidden><div class="ph">Önceki terapiler ve dış dosyalar</div><p class="note">Önceki terapi raporları, reçeteler, başka kliniklerden gelen PDF, fotoğraf ya da Word dosyalarını bu hastanın kaydına ekleyin. Dosyalar Drive'da Ekler klasörüne bu kaydın numarasıyla yüklenir.</p>
     <label class="filebtn"><input type="file" id="fileIn" multiple hidden>Dosya ekle</label> <span id="fileNone" class="note">Henüz dosya eklenmedi.</span><ul id="fileList"></ul></section>
   <form id="form" autocomplete="off"></form>
@@ -194,6 +214,10 @@ td.ses{background:#fff3c4}
     sesleDoldur:(d,q,son)=>api("sesleDoldur",d,q,!!son),
     sesNotlari:(d,tur)=>api("sesNotlari",d,tur),
     uploadFile:(kind,rid,name,mime,b64)=>api("dosyaYukle",kind,rid,name,mime,b64),
+    kaynakYukle:(ad,mime,b64)=>api("kaynakYukle",ad,mime,b64),
+    kaynakListesi:()=>api("kaynakListesi"),
+    kaynaklariIsle:()=>api("kaynaklariIsle"),
+    kararDestegi:(ozet,tur,kilo)=>api("kararDestegi",ozet,tur,kilo),
     speech:{start:()=>nat("speechStart"),stop:()=>nat("speechStop")},
     errKind(e){return(e&&e.message||"hata").slice(0,140)}};
 })();
@@ -212,6 +236,7 @@ const KOPEK=[
 ["h","2. Köpeğin bilgileri"],
 ["two",["t","İsim"],["t","Irk"]],
 ["r","Cinsiyet",["Erkek","Dişi","Kısır Erkek","Kısır Dişi"]],
+["num","Kilo","kg"],
 ["two",["d","Doğum tarihi"],["num","Sahiplenildiği yaş (biliniyorsa)","yıl"]],
 ["two",["d","Sahiplenildiği tarih"],["t","Sahiplenildiği yer"]],
 ["a","Bu köpeği sahiplenme sebebi"],
@@ -414,8 +439,8 @@ function fieldHTML(it){const id=it.id,v=data[id],cls="f"+(it.sub?" in":"");
     return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span><div class="scroll"><table class="stack"><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${Array.from({length:rows},(_,r)=>`<tr>${cols.map((c,ci)=>`<td data-l="${esc(c)}">${box(id+":"+r+":"+ci,"c")}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>`}
   case"g":{const rows=it.a,cols=it.b,mode=it.c,val=v||{};
     return `<div class="${cls}" data-fid="${id}"><span class="l">${esc(it.label)}</span><div class="scroll"><table class="${mode==="text"?"stack":""}"><thead><tr><th></th>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r,ri)=>`<tr><th>${esc(r)}</th>${cols.map((c,ci)=>{const k=ri+"_"+ci,x=val[k]||"";
-      return mode==="ehb"?`<td class="c${data["src_"+id+":"+k]?" ses":""}"><button type="button" class="ehb" data-g="${id}" data-k="${k}" data-v="${esc(x)}" aria-label="${esc(r)} – ${esc(c)}">${esc(x)||"–"}</button></td>`
-      :`<td data-l="${esc(c)}">${box(id+":"+k,"c")}</td>`}).join("")}</tr>`).join("")}</tbody></table></div></div>`}
+      return mode==="ehb"?`<td class="c${isPend(id+":"+k)?" ses":""}"><button type="button" class="ehb" data-g="${id}" data-k="${k}" data-v="${esc(x)}" aria-label="${esc(r)} – ${esc(c)}">${esc(x)||"–"}</button></td>`
+      :`<td data-l="${esc(c)}">${box(id+":"+k,"c")}</td>`}).join("")}</tr>`).join("")}</tbody></table></div>${gridSesNote(it)}</div>`}
   case"s":{const h=(v&&v.h)||(it.a==="sig"?300:it.a==="kroki"?900:it.a==="note"?420:620);
     return `<div class="${cls}"><span class="l">${esc(it.label)}</span>${it.b?`<ul class="hint">${it.b.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
     <div class="pad"><div class="tools" data-tools="${id}">
@@ -430,12 +455,14 @@ function fieldHTML(it){const id=it.id,v=data[id],cls="f"+(it.sub?" in":"");
 function render(){document.body.classList.toggle("kedi",kind==="kedi");$("#bKopek").setAttribute("aria-pressed",kind==="kopek");$("#bKedi").setAttribute("aria-pressed",kind==="kedi");
   const F=FORMS[kind];$("#title").textContent=F.name;items=flatten(F.schema);data=store.get("dk-draft-"+kind)||{};
   if(!data.__started){allFields().filter(i=>i.type==="d"&&/Tarih$/.test(i.label)).forEach(i=>data[i.id]=today());data.__started=1}
+  const hold=$("#holder");["notesPanel","dsPanel"].forEach(i=>hold.append($("#"+i)));
   $("#form").innerHTML=items.map(fieldHTML).join("");
+  {const onamH=[...$("#form").querySelectorAll("h2")].find(h=>/Onam/.test(h.textContent));const np=$("#notesPanel"),dp=$("#dsPanel");if(onamH)onamH.before(np,dp);else $("#form").append(np,dp)}
   $("#nav").innerHTML=items.filter(i=>i.type==="h").map(i=>`<a href="#s-${i.id}">${esc(i.label.replace(/^\d+\.\s*/,""))}</a>`).join("");
   pads={};undoStack=[];document.querySelectorAll("canvas[data-pad]").forEach(setupPad);
   document.querySelectorAll(".ink").forEach(w=>{const d=data["ink_"+w.dataset.ink];if(d){if(d.h)w.style.height=d.h+"px";if(d.s.length)fitInk(w)}});
   document.querySelectorAll("[data-ocr]").forEach(el=>showOcr(el.dataset.ocr));
-  updPending();renderNotes();renderFiles();loadRecent()}
+  updPending();renderNotes();renderFiles();renderDs();sesAllUI();loadRecent()}
 
 const allFields=()=>items.flatMap(i=>i.type==="two"?i.kids:[i]);
 const byId=id=>allFields().find(i=>i.id===id);
@@ -539,7 +566,8 @@ function showOcr(key){const el=document.querySelector(`[data-ocr="${CSS.escape(k
   const o=key.includes(":")||!pads[key]?data["ink_"+key]:data[key],t=data["txt_"+key]||"";el.textContent="";el.className="ocr";
   if(o&&o.dirty&&o.s&&o.s.length&&ocrOk&&!ocrOff){el.classList.add("wait");el.textContent=t?t+"  (güncelleniyor…)":"okunacak…";return}
   const src=data["src_"+key];
-  if(t){const b=document.createElement("b");b.textContent=src?"Sesten: ":"Okunan: ";el.append(b,t);if(src){el.classList.add("ses");const x=document.createElement("button");x.type="button";x.className="unses";x.dataset.unses=key;x.textContent="Kaldır";el.append(" ",x)}}}
+  if(t){const b=document.createElement("b");b.textContent=src?"Sesten: ":"Okunan: ";el.append(b,t);
+    if(src&&!src.ok){el.classList.add("ses");const s=document.createElement("span");s.innerHTML=" "+sesBtns(key);el.append(s)}}}
 function updPending(){const n=pendingList().filter(p=>p.o.s&&p.o.s.length).length,b=$("#bOcr");
   b.hidden=!ocrOk;b.textContent=n?`Yazıları metne çevir (${n})`:"Yazılar okundu";b.disabled=!n||!!ocrBusy;
   $("#ocrNote").textContent=ocrOff}
@@ -610,7 +638,7 @@ function sheetData(docUrl){const KN=kind==="kopek"?"Köpek":"Kedi",ID=IDENT[kind
       for(let r=0;r<it.b;r++){const vals=it.a.map((c,ci)=>txt(it.id+":"+r+":"+ci));if(vals.some(x=>x)){const o={"Kayıt No":rid,"Satır":r+1};it.a.forEach((c,ci)=>{if(!skip(c))o[c]=vals[ci]});rows.push(o)}}
       if(rows.length)tables.push({tab,rows});main[H(it)+" (satır sayısı)"]=rows.length;break}}};
   items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));
-  main["Görüşme notları (otomatik)"]=notesText();main["Ek dosya sayısı"]=(data.__ekler||[]).length;
+  main["Görüşme notları (otomatik)"]=notesText();main["Karar desteği (kullanıldı)"]=data.__karar&&data.__karar.kullan?dsText(data.__karar.sonuc):"";main["Ek dosya sayısı"]=(data.__ekler||[]).length;
   ident["Ek dosyalar klasörü"]=((data.__ekler||[])[0]||{}).klasor||"";
   return[{tab:KN,rows:[main]},{tab:"Kimlik",rows:[ident]},...tables]}
 
@@ -622,14 +650,24 @@ function inkLines(strokes){const S=strokes.filter(s=>s.c!=="#ffffff"&&s.p.length
     return{w:Math.max(1,x1-x0),h:Math.max(1,l.y1-l.y0),strokes:m.map(st=>st.s.p.map(q=>[Math.round(q[0]-x0),Math.round(q[1]-l.y0),q[3]||0]))}})}
 
 /* görüşme sırasında sesle doldurma */
-const sesCls=id=>data["src_"+id]?" ses":"";
-function sesNote(id){const s=data["src_"+id];return s?`<div class="sesnote"><b>Sesten</b>${s.q?` · “${esc(s.q)}”`:""} <button type="button" class="unses" data-unses="${id}">Kaldır</button></div>`:""}
+const isPend=k=>{const s=data["src_"+k];return!!(s&&!s.ok)};
+const sesCls=id=>isPend(id)?" ses":"";
+const sesBtns=k=>`<button type="button" class="useses" data-useses="${k}">Kullan</button><button type="button" class="unses" data-unses="${k}">Kaldır</button>`;
+function sesNote(id){const s=data["src_"+id];if(!s||s.ok)return"";return`<div class="sesnote"><b>Sesten</b>${s.q?` · “${esc(s.q)}”`:""} ${sesBtns(id)}</div>`}
+function gridSesNote(it){const keys=[];it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=it.id+":"+ri+"_"+ci;if(isPend(k))keys.push(k)}));
+  if(!keys.length)return"";return`<div class="sesnote"><b>Sesten</b> · ${keys.length} hücre sarıyla işaretli <button type="button" class="useses" data-usegrid="${it.id}">Hepsini kullan</button><button type="button" class="unses" data-ungrid="${it.id}">Hepsini kaldır</button></div>`}
+function pendingKeys(){return Object.keys(data).filter(k=>k.startsWith("src_")&&!data[k].ok).map(k=>k.slice(4))}
+function unsesKey(k){const [id,a]=k.split(":"),it=byId(id);delete data["src_"+k];if(!it)return id;
+  if(it.type==="g"&&it.c==="ehb"){const g=data[id]||{};delete g[a];data[id]=g}else if(k.includes(":")||["t","a"].includes(it.type))delete data["txt_"+k];else delete data[id];return id}
+function useKey(k){const s=data["src_"+k];if(s)s.ok=true;return k.split(":")[0]}
+function sesAllUI(){const n=pendingKeys().length,b=$("#bSesAll");if(b){b.hidden=!n;b.textContent=`Sesten gelenlerin hepsini kullan (${n})`}}
 function rerenderField(id){const el=document.querySelector(`[data-fid="${CSS.escape(id)}"]`),it=byId(id);if(!el||!it)return;const t=document.createElement("div");t.innerHTML=fieldHTML(it);const n=t.firstElementChild;el.replaceWith(n);
   n.querySelectorAll(".ink").forEach(w=>{const d=data["ink_"+w.dataset.ink];if(d){if(d.h)w.style.height=d.h+"px";if(d.s.length)fitInk(w)}});n.querySelectorAll("[data-ocr]").forEach(e=>showOcr(e.dataset.ocr))}
-document.addEventListener("click",e=>{const b=e.target.closest("[data-unses]");if(!b)return;const k=b.dataset.unses,[id,a]=k.split(":"),it=byId(id);
-  delete data["src_"+k];if(!it){persist();return}
-  if(it.type==="g"&&it.c==="ehb"){const g=data[id]||{};delete g[a];data[id]=g}else if(k.includes(":")||["t","a"].includes(it.type))delete data["txt_"+k];else delete data[id];
-  persist();rerenderField(id)});
+document.addEventListener("click",e=>{let b;
+  if(b=e.target.closest("[data-unses]")){const id=unsesKey(b.dataset.unses);persist();rerenderField(id);sesAllUI();return}
+  if(b=e.target.closest("[data-useses]")){if(b.dataset.useses){const id=useKey(b.dataset.useses);persist();rerenderField(id);sesAllUI()}else if(b.dataset.usegrid){const id=b.dataset.usegrid;pendingKeys().filter(k=>k.split(":")[0]===id).forEach(useKey);persist();rerenderField(id);sesAllUI()}return}
+  if(b=e.target.closest("[data-ungrid]")){const id=b.dataset.ungrid;pendingKeys().filter(k=>k.split(":")[0]===id).forEach(unsesKey);persist();rerenderField(id);sesAllUI();return}
+  if(b=e.target.closest("#bSesAll")){const ids=new Set(pendingKeys().map(useKey));persist();ids.forEach(rerenderField);sesAllUI()}});
 const SES={on:false,busy:false,last:0,lastLen:0,t0:0,timer:null,loop:null,partial:""};
 const isEmptyInk=k=>{const d=data["ink_"+k];return!(d&&d.s&&d.s.length)&&!data["txt_"+k]};
 function sesQuestions(){const out=[];let sec="",parent="";
@@ -669,7 +707,7 @@ function applySes(list){const touchedF=new Set();let n=0;
     case"d":{const x=toDate(val);if(!data[id]&&x){data[id]=x;mark(id)}break}
     case"t":case"a":if(isEmptyInk(id)&&String(val).trim()){data["txt_"+id]=String(val).trim();mark(id)}break;
     case"tb":{const rows=Array.isArray(c.satirlar)?c.satirlar:Array.isArray(val)?val:[];rows.slice(0,it.b).forEach((row,r)=>(Array.isArray(row)?row:[row]).slice(0,it.a.length).forEach((x,ci)=>{const key=id+":"+r+":"+ci;if(x&&isEmptyInk(key)){data["txt_"+key]=String(x);data["src_"+key]={q};touchedF.add(id);n++}}));break}}});
-  if(n){persist();touchedF.forEach(rerenderField)}return n}
+  if(n){persist();touchedF.forEach(rerenderField)}sesAllUI();return n}
 function sesUI(){const b=$("#bSes");if(!b)return;b.hidden=!(BK.speech&&BK.sesOn);b.setAttribute("aria-pressed",SES.on);
   b.textContent=SES.on?"Kaydı bitir":"Görüşmeyi dinle";$("#sesBar").hidden=!SES.on&&!SES.final;
   const f=$("#bFill");if(f){f.hidden=!(BK.sesOn&&data.__dokum&&!SES.on);f.disabled=SES.busy}
@@ -685,7 +723,7 @@ async function sesFill(){if(SES.busy||!BK.sesleDoldur||!BK.sesOn)return;const d=
     catch(e){errs++;st.textContent="Bir bölüm doldurulamadı: "+BK.errKind(e)}}
   if(BK.sesNotlari){st.textContent="Önemli notlar çıkarılıyor…";
     try{const r=await BK.sesNotlari(dok,kind);data.__notlar=r||null;persist();renderNotes()}catch(e){errs++}}
-  st.textContent=`${total} alan sesten dolduruldu`+(errs?` · ${errs} adım başarısız oldu, "Dökümden formu doldur" ile tekrar deneyebilirsiniz`:"")+" · sarı işaretli alanları kontrol edin";
+  st.textContent=`${total} alan sesten dolduruldu`+(errs?` · ${errs} adım başarısız oldu, "Dökümden formu doldur" ile tekrar deneyebilirsiniz`:"")+" · sarı alanları kontrol edip Kullan ya da Kaldır'a basın";
   SES.busy=false;sesUI()}
 function sesStart(){if(!BK.speech)return;
   ask("Hasta sahibinden görüşmenin dinlenip yazıya dökülmesi için onay alındı mı? Ses kaydedilmez, yalnızca yazıya dökülen metin forma eklenir.",async()=>{
@@ -703,6 +741,63 @@ if(BK.on){BK.on("final",m=>{if(!m.text)return;data.__dokum=((data.__dokum||"")+"
   BK.on("status",m=>{if(m.text)setStatus(m.text,"")})}
 $("#bSes").addEventListener("click",()=>SES.on?sesStop():sesStart());
 $("#bFill").addEventListener("click",()=>{SES.final=true;sesFill()});
+
+/* karar desteği: vaka özeti + kaynak kütüphanesi -> öneri ve ilaç dozu */
+function caseSummary(){const ID=IDENT[kind],lines=[];let sec="";
+  const val=it=>{const v=data[it.id];switch(it.type){
+    case"yn":case"r":case"d":return v||"";
+    case"num":return v!==undefined&&v!==""?fmtNum(v)+" "+(it.a||""):"";
+    case"c":return(v||[]).join(", ");
+    case"t":case"a":return data["txt_"+it.id]||"";
+    case"tb":{const rows=[];for(let r=0;r<it.b;r++){const cells=it.a.map((c,ci)=>data["txt_"+it.id+":"+r+":"+ci]||"");if(cells.some(Boolean))rows.push(it.a.map((c,ci)=>c+": "+(cells[ci]||"-")).join("; "))}return rows.join(" | ")}
+    case"g":{const o=[];it.a.forEach((r,ri)=>it.b.forEach((c,ci)=>{const k=ri+"_"+ci,x=it.c==="ehb"?(v||{})[k]:data["txt_"+it.id+":"+k];if(x)o.push(r+" / "+c+": "+x)}));return o.join("; ")}
+    case"s":return["note","free"].includes(it.a)?(data["txt_"+it.id]||""):"";}return""};
+  const one=it=>{if(it.type==="h"){sec=it.label;return}if(/Onam/.test(sec)||ID[it.label]!==undefined)return;if(["h3","n","p","photo"].includes(it.type))return;
+    if(isPend(it.id))return;const x=val(it);if(x&&String(x).trim())lines.push(`${sec} › ${it.label}: ${x}`)};
+  items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));
+  const n=notesText();return("TÜR: "+(kind==="kopek"?"Köpek":"Kedi")+"\n"+lines.join("\n")+(n?"\n\nGÖRÜŞME NOTLARI:\n"+n:"")).slice(0,24000)}
+function caseWeight(){const it=allFields().find(i=>i.type==="num"&&/^Kilo/.test(i.label));if(!it||isPend(it.id))return null;const v=data[it.id];return v?Number(v):null}
+const L=(a)=>Array.isArray(a)?a:[];
+function dsHTML(r,forDoc){const st=forDoc?' style="border-collapse:collapse" border="1" cellpadding="5"':"";let h="";
+  if(r.ozet)h+=`<p><i>${esc(r.ozet)}</i></p>`;
+  const list=(t,a)=>{a=L(a).filter(Boolean);if(a.length)h+=`<p><b>${esc(t)}</b></p><ul>${a.map(x=>`<li>${esc(typeof x==="string"?x:(x.madde||x.metin||JSON.stringify(x)))}${x&&x.kaynak?` <small>(${esc(x.kaynak)})</small>`:""}</li>`).join("")}</ul>`};
+  list("Değerlendirilmesi gerekenler",r.degerlendirme);list("Yönetim seçenekleri",r.yonetim);
+  const ilac=L(r.ilaclar);if(ilac.length)h+=`<p><b>İlaç önerileri (kaynaklardan)</b></p><div class="scroll"><table${st}><tr><th>İlaç</th><th>Endikasyon</th><th>Doz (kaynakta)</th><th>Hesap (${r.kilo?esc(String(r.kilo))+" kg":"kilo girilmedi"})</th><th>Sıklık</th><th>Kaynak</th></tr>${ilac.map(x=>`<tr><td>${esc(x.ilac||"")}</td><td>${esc(x.endikasyon||"")}</td><td>${esc(x.doz||"")}</td><td>${esc(x.hesap||"")}</td><td>${esc(x.siklik||"")}</td><td>${esc(x.kaynak||"")}${x.not?`<br><small>${esc(x.not)}</small>`:""}</td></tr>`).join("")}</table></div>`;
+  list("Uyarılar",r.uyarilar);list("Kaynaklarda bulunamayanlar",r.bulunamayan);
+  const k=L(r.kullanilan_kaynaklar);if(k.length)h+=`<p class="note"><small>Kullanılan kaynak parçaları: ${k.map(esc).join("; ")}</small></p>`;
+  return h||"<p>Öneri üretilemedi.</p>"}
+function dsText(r){if(!r)return"";const a=[r.ozet,...L(r.degerlendirme),...L(r.yonetim),...L(r.ilaclar).map(x=>`${x.ilac}: ${x.doz} → ${x.hesap} (${x.kaynak})`),...L(r.uyarilar)].filter(Boolean);return a.map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\n")}
+function renderDs(){const P=$("#dsPanel");P.hidden=!(BK.kararDestegi&&driveOk);const K=data.__karar;
+  $("#dsOut").innerHTML=K&&K.sonuc?dsHTML(K.sonuc,false):"";$("#dsAct").hidden=!(K&&K.sonuc);
+  $("#dsUsed").textContent=K&&K.kullan?"Kayda eklenecek":"Henüz kayda eklenmedi";$("#bDsUse").hidden=!!(K&&K.kullan);
+  P.classList.toggle("ses",!!(K&&K.sonuc&&!K.kullan))}
+$("#bDs").addEventListener("click",async()=>{if(!BK.kararDestegi)return;const st=$("#dsState"),b=$("#bDs");b.disabled=true;
+  st.textContent="Kaynak kütüphanesi taranıyor ve öneri hazırlanıyor (1 dakikaya kadar sürebilir)…";
+  try{const r=await BK.kararDestegi(caseSummary(),kind,caseWeight());r.kilo=caseWeight();data.__karar={sonuc:r,kullan:false,zaman:new Date().toLocaleString("tr-TR")};persist();renderDs();
+    st.textContent=L(r.kullanilan_kaynaklar).length?"Öneri hazır. Kontrol edip Kullan ya da Kaldır'a basın.":"Kaynak kütüphanesinde ilgili bilgi bulunamadı; öneriler sınırlı."}
+  catch(e){st.textContent="Öneri alınamadı: "+BK.errKind(e)}b.disabled=false});
+$("#bDsUse").addEventListener("click",()=>{if(data.__karar){data.__karar.kullan=true;persist();renderDs()}});
+$("#bDsDel").addEventListener("click",()=>ask("Karar desteği önerisi kaldırılsın mı?",()=>{delete data.__karar;persist();renderDs();$("#dsState").textContent=""}));
+
+/* kaynak kütüphanesi */
+async function loadLib(){if(!BK.kaynakListesi||!driveOk)return;const ul=$("#libList");
+  try{const r=await BK.kaynakListesi();ul.innerHTML="";const files=L(r&&r.dosyalar);
+    if(!files.length){const li=document.createElement("li");li.className="note";li.textContent="Henüz kaynak yok.";ul.append(li)}
+    files.forEach(f=>{const li=document.createElement("li");const a=document.createElement(/^https:\/\//.test(f.url||"")?"a":"span");a.textContent=f.ad||"kaynak";if(a.tagName==="A"){a.href=f.url;a.target="_blank";a.rel="noopener"}
+      const d=document.createElement("span");d.className="note";d.textContent=" · "+(f.durum==="islendi"?`işlendi, ${f.parca} parça`:f.durum==="hata"?"işlenemedi: "+(f.hata||""):"işlenmeyi bekliyor");li.append(a,d);ul.append(li)});
+    $("#libState").textContent=(r&&r.otomatik)?"Otomatik işleme açık (saatte bir)":"Otomatik işleme kapalı · Apps Script'te otomatikIslemeKur'u bir kez çalıştırın"}
+  catch(e){ul.innerHTML="";const li=document.createElement("li");li.className="note";li.textContent="Liste alınamadı: "+BK.errKind(e);ul.append(li)}}
+$("#libPanel").addEventListener("toggle",()=>{if($("#libPanel").open)loadLib()});
+$("#libIn").addEventListener("change",async e=>{const files=[...(e.target.files||[])];e.target.value="";if(!files.length||!BK.kaynakYukle)return;let ok=0;
+  for(const f of files){if(f.size>45*1024*1024){setStatus(f.name+" 45 MB'tan büyük; Drive'daki Kaynaklar klasörüne doğrudan yükleyin","err");continue}
+    $("#libState").textContent="Yükleniyor: "+f.name;
+    try{const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]||"");r.onerror=rej;r.readAsDataURL(f)});
+      await BK.kaynakYukle(f.name,f.type||"application/octet-stream",b64);ok++}catch(x){setStatus(f.name+" yüklenemedi: "+BK.errKind(x),"err")}}
+  $("#libState").textContent=ok+" kaynak yüklendi · işleniyor…";await procLib()});
+async function procLib(){if(!BK.kaynaklariIsle)return;const b=$("#bLibProc");b.disabled=true;
+  try{let r;do{r=await BK.kaynaklariIsle();$("#libState").textContent=`${r.islenen||0} kaynak işlendi`+(r.kalan?`, ${r.kalan} kaldı…`:"");}while(r&&r.kalan&&r.islenen)}
+  catch(e){$("#libState").textContent="İşlenemedi: "+BK.errKind(e)}b.disabled=false;loadLib()}
+$("#bLibProc").addEventListener("click",procLib);
 
 /* görüşme notları paneli */
 function renderNotes(){const P=$("#notesPanel"),n=data.__notlar;if(!n||(!n.ozet&&!(n.notlar||[]).length)){P.hidden=true;return}P.hidden=false;
@@ -737,13 +832,14 @@ $("#dlgNo").addEventListener("click",()=>$("#dlg").classList.remove("on"));
 
 /* Drive belgesi */
 function docBody(){const out=[],dash='<span style="color:#999">—</span>';
-  const N=data.__notlar;if(N&&(N.ozet||(N.notlar||[]).length)){out.push(`<h2 style="color:#17324a">Görüşmeden önemli notlar (otomatik)</h2>${N.ozet?`<p><i>${esc(N.ozet)}</i></p>`:""}`);
+  const notesOut=()=>{const N=data.__notlar;if(N&&(N.ozet||(N.notlar||[]).length)){out.push(`<h2 style="color:#17324a">Görüşmeden önemli notlar (otomatik)</h2>${N.ozet?`<p><i>${esc(N.ozet)}</i></p>`:""}`);
     let last=null;(N.notlar||[]).forEach(x=>{if(x.baslik!==last){out.push(`<p><b>${esc(x.baslik||"")}</b></p>`);last=x.baslik}out.push(`<p style="margin-left:18px">• ${esc(x.madde||"")}</p>`)})}
+    const K=data.__karar;if(K&&K.kullan&&K.sonuc)out.push(`<h2 style="color:#17324a">Karar desteği (hekim tarafından kayda eklendi)</h2>${dsHTML(K.sonuc,true)}`)};
   const E=data.__ekler||[];if(E.length){out.push(`<h2 style="color:#17324a">Önceki terapiler ve dış dosyalar</h2>`+E.map(f=>`<p>• ${/^https:\/\//.test(f.url||"")?`<a href="${esc(f.url)}">${esc(f.ad||"dosya")}</a>`:esc(f.ad||"dosya")}</p>`).join(""))}
   const txtLine=k=>{const t=data["txt_"+k];return t?`<br><span style="color:#444">Okunan metin: ${esc(t).replace(/\n/g,"<br>")}</span>`:""};
   const one=it=>{const v=data[it.id],pad=it.sub?"margin-left:24px;":"";
     switch(it.type){
-    case"h":out.push(`<h2 style="color:#17324a">${esc(it.label)}</h2>`);break;
+    case"h":if(/Onam/.test(it.label))notesOut();out.push(`<h2 style="color:#17324a">${esc(it.label)}</h2>`);break;
     case"h3":out.push(`<h3>${esc(it.label)}</h3>`);break;
     case"n":out.push(`<p style="${pad}"><i>${esc(it.label)}</i></p>`);break;
     case"p":out.push(it.a==="bold"?`<p><b>${esc(it.label)}</b></p>`:it.a==="small"?`<p style="font-size:9pt;color:#444">${esc(it.label)}</p>`:`<p style="text-align:justify">${esc(it.label)}</p>`);break;
@@ -771,6 +867,8 @@ function save(){if(saving)return;
   if(!driveOk){setStatus(BK.noDrive,"err");return}
   const kv=allFields().find(i=>i.type==="c"&&i.label.startsWith("Kişisel verilerin korunması"));
   const go=()=>{if(kv&&!(data[kv.id]||[]).length){ask("KVKK açık rıza kutusu işaretlenmedi. Form yine de kaydedilsin mi?",doSave,"Yine de kaydet");return}doSave()};
+  const pend=pendingKeys();
+  if(pend.length){ask(`${pend.length} alan sesten dolduruldu ama henüz onaylanmadı. Onaylanmamış alanlar kayda alınmadan kaydedilsin mi? (Kaydetmeden önce gözden geçirmek için Vazgeç'e basın.)`,()=>{const ids=new Set(pend.map(unsesKey));persist();ids.forEach(rerenderField);sesAllUI();save()},"Onaylanmamışları çıkar ve kaydet");return}
   if(data.__savedAt){ask("Bu form daha önce kaydedildi. Tekrar kaydetmek yeni bir belge ve tabloda aynı kayıt numarasıyla yeni bir satır oluşturur. Devam edilsin mi?",go,"Tekrar kaydet");return}
   go()}
 async function doSave(){if(saving)return;
@@ -804,7 +902,7 @@ $("#bSave").addEventListener("click",save);
 $("#bNew").addEventListener("click",newPatient);
 setFinger(fingerOn);render();
 if(BK.settings){$("#bSet").hidden=false;$("#bSet").addEventListener("click",()=>BK.settings())}
-BK.init().catch(e=>{setStatus("Bağlantı kurulamadı: "+BK.errKind(e),"err")}).then(()=>{driveOk=!!BK.drive;ocrOk=!!BK.ocrOn;sesUI();renderFiles();if(BK.settings)$("#bSet").hidden=false;updPending();document.querySelectorAll("[data-ocr]").forEach(el=>showOcr(el.dataset.ocr));
+BK.init().catch(e=>{setStatus("Bağlantı kurulamadı: "+BK.errKind(e),"err")}).then(()=>{driveOk=!!BK.drive;ocrOk=!!BK.ocrOn;sesUI();renderFiles();renderDs();$("#libPanel").hidden=!(BK.kaynakListesi&&driveOk);if(BK.settings)$("#bSet").hidden=false;updPending();document.querySelectorAll("[data-ocr]").forEach(el=>showOcr(el.dataset.ocr));
   if(driveOk)loadRecent();else{const ul=$("#recent");ul.innerHTML="";const li=document.createElement("li");li.className="note";li.textContent=BK.noDrive;ul.append(li)}
   if(ocrOk&&pendingList().length)scheduleOcr()});
 }
