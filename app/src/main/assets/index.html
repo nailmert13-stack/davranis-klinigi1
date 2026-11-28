@@ -140,6 +140,15 @@ td.ses{background:#fff3c4}
 .dl .dseg{padding:6px 0;border-bottom:1px solid #eef1f3}.dl .dseg time{display:block!important;margin-bottom:2px;font-size:12px;color:var(--soft)}
 .dl .dseg.hl{background:#fff3c4;border-radius:6px;padding:6px 8px}.dl .part{color:var(--soft);font-style:italic}
 .oner .oq{cursor:pointer;text-decoration:underline dotted}
+.dsq{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.dsqh small{color:var(--soft);margin-left:6px}
+.dsqrow{display:flex;gap:8px;align-items:center;margin:8px 0}
+.dsqrow input{flex:1;min-width:0;min-height:48px;font-size:18px;padding:6px 12px;border:1px solid var(--line);border-radius:10px;background:#fbfcfd;color:var(--ink)}
+.dsq .ink{height:96px}
+#dsQOut table{border-collapse:collapse;width:100%;margin:6px 0}#dsQOut th,#dsQOut td{border:1px solid var(--line);padding:6px;font-size:14px}
+.alin{margin:8px 0;padding:8px 10px;background:#f7f9fa;border-radius:8px;font-size:14px;line-height:1.5}.alin p{margin:4px 0 0;white-space:pre-wrap}
+.alin mark{background:#ffe58a;padding:0 1px}
+#dsQSaved .note{margin-top:8px}
 #libPanel summary{cursor:pointer;list-style:revert}
 #dsPanel{border-left:4px solid #1f6f50}
 #dsPanel.ses{border-left-color:#e0a400}
@@ -199,7 +208,11 @@ td.ses{background:#fff3c4}
     <p class="note">Öneriler yalnızca yüklediğiniz kaynaklardan, kaynak adıyla verilir; dozlar kiloya göre adım adım hesaplanır. Uygulamadan önce kaynağın kendisinden kontrol edin. Gönderilen vaka özetinde kimlik bilgisi yoktur.</p>
     <button type="button" id="bDs" class="filebtn">Öneri ve ilaç dozu iste</button> <span id="dsState" class="note"></span>
     <div id="dsOut"></div>
-    <div id="dsAct" hidden><button type="button" id="bDsUse" class="useses">Kullan (kayda ekle)</button><button type="button" id="bDsDel" class="unses">Kaldır</button> <span id="dsUsed" class="note"></span></div></section>
+    <div id="dsAct" hidden><button type="button" id="bDsUse" class="useses">Kullan (kayda ekle)</button><button type="button" id="bDsDel" class="unses">Kaldır</button> <span id="dsUsed" class="note"></span></div>
+    <div class="dsq" id="dsqBox"><div class="dsqh"><b>Kaynaklarda ara</b> <small>İlaç adını ya da konuyu kalemle yazın veya klavyeyle girin, sonra Ara'ya basın</small></div>
+      <div class="dsqrow"><input id="dsQ" type="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="ör. fluoksetin · klomipramin kedi · ayrılık kaygısı" aria-label="Kaynaklarda aranacak ilaç ya da konu"><button type="button" id="bDsQ" class="filebtn">Ara</button><button type="button" id="bDsQClr" class="unses">Temizle</button></div>
+      <div class="ink sz-t" data-ink="dsq" role="img" aria-label="Aranacak ilacı kalemle yazma alanı"></div><div class="ocr" data-ocr="dsq"></div>
+      <p id="dsQState" class="note"></p><div id="dsQOut"></div><div id="dsQSaved"></div></div></section>
   </div>
   <section id="filesPanel" class="panel" hidden><div class="ph">Önceki terapiler ve dış dosyalar</div><p class="note">Önceki terapi raporları, reçeteler, başka kliniklerden gelen PDF, fotoğraf ya da Word dosyalarını bu hastanın kaydına ekleyin. Dosyalar Drive'da Ekler klasörüne bu kaydın numarasıyla yüklenir.</p>
     <label class="filebtn"><input type="file" id="fileIn" multiple hidden>Dosya ekle</label> <span id="fileNone" class="note">Henüz dosya eklenmedi.</span><ul id="fileList"></ul></section>
@@ -242,6 +255,7 @@ td.ses{background:#fff3c4}
     kaynakListesi:()=>api("kaynakListesi"),
     kaynaklariIsle:()=>api("kaynaklariIsle"),
     kararDestegi:(ozet,tur,kilo)=>api("kararDestegi",ozet,tur,kilo),
+    kaynakSorgu:(soru,tur,kilo,yz)=>api("kaynakSorgu",soru,tur,kilo,yz),
     speech:{start:()=>nat("speechStart"),stop:()=>nat("speechStop")},
     errKind(e){return(e&&e.message||"hata").slice(0,140)}};
 })();
@@ -487,7 +501,7 @@ function render(){document.body.classList.toggle("kedi",kind==="kedi");$("#bKope
   pads={};undoStack=[];document.querySelectorAll("canvas[data-pad]").forEach(setupPad);
   document.querySelectorAll(".ink").forEach(w=>{const d=data["ink_"+w.dataset.ink];if(d){if(d.h)w.style.height=d.h+"px";if(d.s.length)fitInk(w)}});
   document.querySelectorAll("[data-ocr]").forEach(el=>showOcr(el.dataset.ocr));
-  [...new Set(onerKeys().map(k=>k.split(":")[0]))].forEach(renderOner);
+  [...new Set(onerKeys().map(k=>k.split(":")[0]))].forEach(renderOner);dsQReset();
   updPending();renderNotes();renderFiles();renderDs();sesAllUI();sesUI();loadRecent()}
 
 const allFields=()=>items.flatMap(i=>i.type==="two"?i.kids:[i]);
@@ -592,7 +606,7 @@ function pendingList(){const out=[];
 function showOcr(key){const el=document.querySelector(`[data-ocr="${CSS.escape(key)}"]`);if(!el)return;
   const o=key.includes(":")||!pads[key]?data["ink_"+key]:data[key],t=data["txt_"+key]||"";el.textContent="";el.className="ocr";
   if(o&&o.dirty&&o.s&&o.s.length&&ocrOk&&!ocrOff){el.classList.add("wait");el.textContent=t?t+"  (güncelleniyor…)":"okunacak…";const sv=data["sesv_"+key];if(sv){const d=document.createElement("div");d.className="sesv";d.textContent="Sesten (kullanıldı): "+sv;el.append(d)}return}
-  if(t){const b=document.createElement("b");b.textContent="Okunan: ";el.append(b,t)}
+  if(t){const b=document.createElement("b");b.textContent="Okunan: ";el.append(b,t);if(key==="dsq"&&$("#dsQ").dataset.from!==t){$("#dsQ").value=t;$("#dsQ").dataset.from=t}}
   const sv=data["sesv_"+key];if(sv){const d=document.createElement("div");d.className="sesv";const b=document.createElement("b");b.textContent="Sesten (kullanıldı): ";d.append(b,sv);el.append(d)}}
 function updPending(){const n=pendingList().filter(p=>p.o.s&&p.o.s.length).length,b=$("#bOcr");
   b.hidden=!ocrOk;b.textContent=n?`Yazıları metne çevir (${n})`:"Yazılar okundu";b.disabled=!n||!!ocrBusy;
@@ -666,7 +680,7 @@ function sheetData(docUrl){const KN=kind==="kopek"?"Köpek":"Kedi",ID=IDENT[kind
       for(let r=0;r<it.b;r++){const vals=it.a.map((c,ci)=>txt(it.id+":"+r+":"+ci));if(vals.some(x=>x)){const o={"Kayıt No":rid,"Satır":r+1};it.a.forEach((c,ci)=>{if(!skip(c))o[c]=vals[ci]});rows.push(o)}}
       if(rows.length)tables.push({tab,rows});main[H(it)+" (satır sayısı)"]=rows.length;break}}};
   items.forEach(it=>it.type==="two"?it.kids.forEach(one):one(it));
-  main["Görüşme özeti (otomatik)"]=(data.__notlar&&data.__notlar.ayrinti)||"";main["Görüşme notları (otomatik)"]=notesText();main["Karar desteği (kullanıldı)"]=data.__karar&&data.__karar.kullan?dsText(data.__karar.sonuc):"";main["Ek dosya sayısı"]=(data.__ekler||[]).length;
+  main["Görüşme özeti (otomatik)"]=(data.__notlar&&data.__notlar.ayrinti)||"";main["Görüşme notları (otomatik)"]=notesText();main["Karar desteği (kullanıldı)"]=data.__karar&&data.__karar.kullan?dsText(data.__karar.sonuc):"";main["Kaynak aramaları"]=(data.__aramalar||[]).map(x=>"["+x.soru+"] "+dsText(x.sonuc)).join("\n\n");main["Ek dosya sayısı"]=(data.__ekler||[]).length;
   ident["Ek dosyalar klasörü"]=((data.__ekler||[])[0]||{}).klasor||"";
   return[{tab:KN,rows:[main]},{tab:"Kimlik",rows:[ident]},...tables]}
 
@@ -869,7 +883,7 @@ function dsHTML(r,forDoc){const st=forDoc?' style="border-collapse:collapse" bor
   const k=L(r.kullanilan_kaynaklar);if(k.length)h+=`<p class="note"><small>Kullanılan kaynak parçaları: ${k.map(esc).join("; ")}</small></p>`;
   return h||"<p>Öneri üretilemedi.</p>"}
 function dsText(r){if(!r)return"";const a=[r.ozet,...L(r.degerlendirme),...L(r.yonetim),...L(r.ilaclar).map(x=>`${x.ilac}: ${x.doz} → ${x.hesap} (${x.kaynak})`),...L(r.uyarilar)].filter(Boolean);return a.map(x=>typeof x==="string"?x:JSON.stringify(x)).join("\n")}
-function renderDs(){const P=$("#dsPanel");P.hidden=!(BK.kararDestegi&&driveOk);const K=data.__karar;
+function renderDs(){const P=$("#dsPanel");P.hidden=!(BK.kararDestegi&&driveOk);$("#dsqBox").hidden=!BK.kaynakSorgu;const K=data.__karar;
   $("#dsOut").innerHTML=K&&K.sonuc?dsHTML(K.sonuc,false):"";$("#dsAct").hidden=!(K&&K.sonuc);
   $("#dsUsed").textContent=K&&K.kullan?"Kayda eklenecek":"Henüz kayda eklenmedi";$("#bDsUse").hidden=!!(K&&K.kullan);
   P.classList.toggle("ses",!!(K&&K.sonuc&&!K.kullan))}
@@ -890,6 +904,40 @@ $("#bDs").addEventListener("click",async()=>{if(!BK.kararDestegi)return;const st
   try{dsShow(await dsRun(),true)}catch(e){st.textContent="Öneri alınamadı: "+BK.errKind(e)}b.disabled=false});
 $("#bDsUse").addEventListener("click",()=>{if(data.__karar){data.__karar.kullan=true;persist();renderDs()}});
 $("#bDsDel").addEventListener("click",()=>ask("Karar desteği önerisi kaldırılsın mı?",()=>{delete data.__karar;persist();renderDs();$("#dsState").textContent=""}));
+
+/* elle arama: ilaç ya da konu adıyla kaynaklarda arama */
+let qJob=0,qCur=null;
+function hlTerms(text,terms){let h=esc(text);[...new Set((terms||[]).map(t=>String(t).trim()).filter(t=>t.length>=3))].sort((a,b)=>b.length-a.length).forEach(t=>{
+  const re=new RegExp("("+esc(t).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi");h=h.replace(re,(m,x,i,all)=>{const pre=all.slice(0,i);return pre.lastIndexOf("<")>pre.lastIndexOf(">")?m:"<mark>"+x+"</mark>"})});return h}
+function dsQRender(){const o=$("#dsQOut");if(!qCur){o.innerHTML="";return}const r=qCur,A=L(r.alintilar);let h="";
+  if(r.sonuc)h+=dsHTML(Object.assign({},r.sonuc,{kilo:r.kilo}),false);
+  if(A.length)h+=`<details${r.sonuc?"":" open"}><summary>Kaynaktaki metin (${A.length} parça)</summary>${A.map(a=>`<div class="alin"><b>[${a.no}] ${esc(a.kaynak)} — parça ${esc(String(a.parca))}</b><p>${hlTerms(a.metin,r.terimler)}</p></div>`).join("")}</details>`;
+  if(r.sonuc||A.length)h+=`<button type="button" class="useses" id="bDsQAdd">Bu aramayı kayda ekle</button>`;
+  o.innerHTML=h}
+function dsQSavedUI(){const S=data.__aramalar||[],el=$("#dsQSaved");el.innerHTML="";if(!S.length)return;
+  const p=document.createElement("p");p.className="note";p.textContent="Kayda eklenen aramalar: ";
+  S.forEach((x,i)=>{const b=document.createElement("button");b.type="button";b.className="unses";b.dataset.qdel=i;b.textContent=x.soru+" ✕";p.append(b)});el.append(p)}
+async function dsSearch(){if(!BK.kaynakSorgu)return;const st=$("#dsQState");let q=$("#dsQ").value.trim();
+  if(!q){const d=data.ink_dsq;if(d&&d.dirty&&d.s&&d.s.length&&ocrOk){st.textContent="Yazınız okunuyor…";await runOcr()}q=(data.txt_dsq||"").trim();$("#dsQ").value=q}
+  if(!q){st.textContent="Önce aranacak ilacı ya da konuyu yazın.";return}
+  const my=++qJob,kg=caseWeight(),b=$("#bDsQ");b.disabled=true;qCur=null;dsQRender();st.textContent="“"+q+"” kaynaklarda aranıyor…";
+  try{const r=await BK.kaynakSorgu(q,kind,kg,false);if(my!==qJob)return;qCur=Object.assign(r||{},{kilo:kg});dsQRender();
+    const n=L(r&&r.alintilar).length;
+    if(!n){st.textContent="Kaynaklarda “"+q+"” geçen bir yer bulunamadı. Yazımı kontrol edin ya da İngilizce adını deneyin.";return}
+    st.textContent=n+" kaynak parçası bulundu · doz tablosu hazırlanıyor…";
+    const r2=await BK.kaynakSorgu(q,kind,kg,true);if(my!==qJob)return;qCur=Object.assign(r2||{},{kilo:kg});dsQRender();
+    st.textContent=qCur.sonuc?"Hazır. Dozları aşağıdaki kaynak metniyle karşılaştırın.":"Kaynak metni aşağıda."}
+  catch(e){if(my===qJob)st.textContent="Arama yapılamadı: "+BK.errKind(e)+(qCur?" · bulunan kaynak metni aşağıda":"")}
+  finally{if(my===qJob)b.disabled=false}}
+function dsQReset(){qJob++;qCur=null;$("#dsQ").value="";delete $("#dsQ").dataset.from;$("#dsQState").textContent="";$("#bDsQ").disabled=false;dsQRender();
+  const w=document.querySelector('[data-ink="dsq"]');if(w&&w.clientWidth)fitInk(w);showOcr("dsq");dsQSavedUI()}
+$("#bDsQ").addEventListener("click",dsSearch);
+$("#dsQ").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();dsSearch()}});
+$("#bDsQClr").addEventListener("click",()=>{delete data.ink_dsq;delete data.txt_dsq;persist();dsQReset();updPending()});
+document.addEventListener("click",e=>{let b;
+  if(e.target.closest("#bDsQAdd")&&qCur){(data.__aramalar=data.__aramalar||[]).push({soru:qCur.soru,sonuc:qCur.sonuc||null,kaynaklar:L(qCur.alintilar).map(a=>a.kaynak+" — parça "+a.parca),kilo:qCur.kilo,zaman:new Date().toLocaleString("tr-TR")});
+    persist();dsQSavedUI();$("#dsQState").textContent="Arama kayda eklendi.";return}
+  if(b=e.target.closest("[data-qdel]")){const i=+b.dataset.qdel;ask("Bu arama kayıttan çıkarılsın mı?",()=>{(data.__aramalar||[]).splice(i,1);persist();dsQSavedUI()})}});
 
 /* kaynak kütüphanesi */
 async function loadLib(){if(!BK.kaynakListesi||!driveOk)return;const ul=$("#libList");
@@ -946,7 +994,9 @@ $("#dlgNo").addEventListener("click",()=>$("#dlg").classList.remove("on"));
 function docBody(){const out=[],dash='<span style="color:#999">—</span>';
   const notesOut=()=>{const N=data.__notlar;if(N&&(N.ozet||N.ayrinti||(N.notlar||[]).length)){out.push(`<h2 style="color:#17324a">Görüşmeden önemli notlar (otomatik)</h2>${N.ozet?`<p><i>${esc(N.ozet)}</i></p>`:""}${N.ayrinti?`<p><b>Görüşme özeti</b></p>${String(N.ayrinti).split(/\n+/).map(x=>`<p style="text-align:justify">${esc(x)}</p>`).join("")}`:""}`);
     let last=null;(N.notlar||[]).forEach(x=>{if(x.baslik!==last){out.push(`<p><b>${esc(x.baslik||"")}</b></p>`);last=x.baslik}out.push(`<p style="margin-left:18px">• ${esc(x.madde||"")}</p>`)})}
-    const K=data.__karar;if(K&&K.kullan&&K.sonuc)out.push(`<h2 style="color:#17324a">Karar desteği (hekim tarafından kayda eklendi)</h2>${dsHTML(K.sonuc,true)}`)};
+    const K=data.__karar;if(K&&K.kullan&&K.sonuc)out.push(`<h2 style="color:#17324a">Karar desteği (hekim tarafından kayda eklendi)</h2>${dsHTML(K.sonuc,true)}`);
+    const A=data.__aramalar||[];if(A.length){out.push(`<h2 style="color:#17324a">Kaynak aramaları (hekim tarafından kayda eklendi)</h2>`);
+      A.forEach(x=>{out.push(`<p><b>Arama: ${esc(x.soru)}</b> <span style="color:#888">(${esc(x.zaman||"")})</span></p>`);if(x.sonuc)out.push(dsHTML(Object.assign({},x.sonuc,{kilo:x.kilo}),true));else if(L(x.kaynaklar).length)out.push(`<p>Bulunan kaynaklar: ${L(x.kaynaklar).map(esc).join("; ")}</p>`)})}};
   const E=data.__ekler||[];if(E.length){out.push(`<h2 style="color:#17324a">Önceki terapiler ve dış dosyalar</h2>`+E.map(f=>`<p>• ${/^https:\/\//.test(f.url||"")?`<a href="${esc(f.url)}">${esc(f.ad||"dosya")}</a>`:esc(f.ad||"dosya")}</p>`).join(""))}
   const sesLine=k=>{const t=data["sesv_"+k];return t?`<br><span style="color:#444">Sesten (hekim onayladı): ${esc(t).replace(/\n/g,"<br>")}</span>`:""};
   const txtLine=k=>{const t=data["txt_"+k];return(t?`<br><span style="color:#444">Okunan metin: ${esc(t).replace(/\n/g,"<br>")}</span>`:"")+sesLine(k)};
